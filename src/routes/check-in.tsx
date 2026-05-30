@@ -20,7 +20,7 @@ export const Route = createFileRoute("/check-in")({
       },
     ],
   }),
-  component: CheckInPage;
+  component: CheckInPage,
 });
 
 type Status = "on-track" | "watch" | "breach";
