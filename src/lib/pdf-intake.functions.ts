@@ -4,7 +4,8 @@ import { z } from "zod";
 import { createOpenRouterProvider } from "./ai-gateway.server";
 
 const Input = z.object({
-  pdfText: z.string().min(1),
+  pdfBase64: z.string().min(1),
+  fileName: z.string().optional(),
 });
 
 const ExtractedAnswers = z.object({
@@ -15,7 +16,9 @@ const ExtractedAnswers = z.object({
   timeBox: z.string().describe("How long before the team walks away if it isn't working"),
   reputationalRisk: z.string().describe("Reputational exposure if the pilot fails publicly"),
   opportunityCost: z.string().describe("What the team is choosing NOT to do during this pilot"),
-  killCriteria: z.string().describe("Specific conditions that would trigger stopping the pilot early"),
+  killCriteria: z
+    .string()
+    .describe("Specific conditions that would trigger stopping the pilot early"),
   successSignals: z.string().describe("What 'worth continuing' looks like — concrete signals"),
 });
 
@@ -44,7 +47,7 @@ Extract exactly what is stated in the document. Do not invent or infer beyond wh
 If a field cannot be answered from the document, return an empty string "" for that field.
 Be concise — these are form field answers, not paragraphs.`;
 
-    const prompt = `Extract answers to the following nine questions from this document. Return only what is explicitly stated or clearly implied. Use "" for anything not found.
+    const prompt = `Extract answers to the following nine questions from the attached PDF document. Return only what is explicitly stated or clearly implied. Use "" for anything not found.
 
 Questions:
 1. pilotName — What is the AI pilot called?
@@ -55,16 +58,29 @@ Questions:
 6. reputationalRisk — What is the reputational exposure if this fails?
 7. opportunityCost — What is the team choosing NOT to do during this pilot?
 8. killCriteria — What specific conditions would trigger stopping the pilot early?
-9. successSignals — What does "worth continuing" look like?
-
-Document:
-${data.pdfText}`;
+9. successSignals — What does "worth continuing" look like?`;
 
     try {
       const { output } = await generateText({
         model: gateway("google/gemini-2.5-flash"),
         system,
-        prompt,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: prompt,
+              },
+              {
+                type: "file",
+                data: data.pdfBase64,
+                filename: data.fileName ?? "commitment-document.pdf",
+                mediaType: "application/pdf",
+              },
+            ],
+          },
+        ],
         output: Output.object({ schema: ExtractedAnswers }),
       });
 

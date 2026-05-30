@@ -47,13 +47,11 @@ function Index() {
   const current = promptScript[step];
   const value = answers[current.id];
   const progress = useMemo(
-    () =>
-      promptScript.filter((p) => answers[p.id].trim().length > 0).length,
+    () => promptScript.filter((p) => answers[p.id].trim().length > 0).length,
     [answers],
   );
 
-  const update = (v: string) =>
-    setAnswers((a) => ({ ...a, [current.id]: v }));
+  const update = (v: string) => setAnswers((a) => ({ ...a, [current.id]: v }));
 
   const next = () => {
     if (step < total - 1) setStep(step + 1);
@@ -81,44 +79,29 @@ function Index() {
     setPdfFileName(file.name);
 
     try {
-      // Extract text from PDF using FileReader + pdf.js-style base64
       const arrayBuffer = await file.arrayBuffer();
       const uint8 = new Uint8Array(arrayBuffer);
 
-      // Convert to base64 to send to server
       let binary = "";
       for (let i = 0; i < uint8.length; i++) {
         binary += String.fromCharCode(uint8[i]);
       }
-      const base64 = btoa(binary);
+      const pdfBase64 = btoa(binary);
 
-      // We send the raw base64; the server fn will extract text via a simple approach
-      // For now we use a text extraction fallback: try to decode readable strings
-      const textDecoder = new TextDecoder("utf-8", { fatal: false });
-      const rawText = textDecoder.decode(uint8);
-
-      // Clean up binary noise — keep readable ASCII runs of 4+ chars
-      const pdfText = rawText
-        .replace(/[^\x20-\x7E\n\r\t]/g, " ")
-        .replace(/ {3,}/g, " ")
-        .replace(/\n{3,}/g, "\n\n")
-        .trim()
-        .slice(0, 12000); // cap to avoid token overflow
-
-      if (pdfText.length < 100) {
-        throw new Error(
-          "Could not extract readable text from this PDF. Try a text-based PDF (not a scanned image).",
-        );
-      }
-
-      const result = await runExtract({ data: { pdfText } });
+      const result = await runExtract({
+        data: {
+          pdfBase64,
+          fileName: file.name,
+        },
+      });
 
       // Merge extracted answers into state (only overwrite if non-empty)
       setAnswers((prev) => {
         const next = { ...prev };
-        for (const [key, val] of Object.entries(result.answers)) {
+        for (const [rawKey, val] of Object.entries(result.answers)) {
           if (val && val.trim().length > 0) {
-            (next as any)[key] = val;
+            const key = rawKey as keyof CommitmentData;
+            next[key] = val;
           }
         }
         return next;
@@ -128,13 +111,11 @@ function Index() {
 
       // Jump to first missing question if any, otherwise step 0
       if (result.missing.length > 0) {
-        const firstMissingIndex = promptScript.findIndex((p) =>
-          result.missing.includes(p.id),
-        );
+        const firstMissingIndex = promptScript.findIndex((p) => result.missing.includes(p.id));
         if (firstMissingIndex >= 0) setStep(firstMissingIndex);
       }
-    } catch (err: any) {
-      setPdfError(err?.message || "PDF extraction failed.");
+    } catch (err: unknown) {
+      setPdfError(err instanceof Error ? err.message : "PDF extraction failed.");
     } finally {
       setPdfUploading(false);
       // Reset input so same file can be re-uploaded
@@ -201,14 +182,14 @@ function Index() {
 
           {/* Conversation panel */}
           <div className="col-span-12 lg:col-span-8">
-
             {/* PDF Upload Banner */}
             <div className="mb-4 border border-border bg-card p-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="eyebrow mb-1">Import from document</div>
                   <p className="text-[12px] text-muted-foreground">
-                    Upload a PDF and we'll pre-fill what we can find. Missing answers will be flagged in red.
+                    Upload a PDF and we'll pre-fill what we can find. Missing answers will be
+                    flagged in red.
                   </p>
                 </div>
                 <div className="shrink-0">
@@ -240,15 +221,14 @@ function Index() {
                   <span>{pdfFileName} imported</span>
                   {missingFromPdf.length > 0 && (
                     <span className="text-destructive">
-                      · {missingFromPdf.length} question{missingFromPdf.length > 1 ? "s" : ""} not found in document
+                      · {missingFromPdf.length} question{missingFromPdf.length > 1 ? "s" : ""} not
+                      found in document
                     </span>
                   )}
                 </div>
               )}
 
-              {pdfError && (
-                <p className="mt-3 text-[12px] text-destructive">{pdfError}</p>
-              )}
+              {pdfError && <p className="mt-3 text-[12px] text-destructive">{pdfError}</p>}
             </div>
 
             <div className="border border-border bg-card p-10">
@@ -264,12 +244,8 @@ function Index() {
                 </button>
               </div>
 
-              <h2 className="mt-6 font-serif text-[36px] leading-[1.1]">
-                {current.question}
-              </h2>
-              <p className="mt-3 text-[14px] italic text-muted-foreground">
-                {current.hint}
-              </p>
+              <h2 className="mt-6 font-serif text-[36px] leading-[1.1]">{current.question}</h2>
+              <p className="mt-3 text-[14px] italic text-muted-foreground">{current.hint}</p>
 
               <textarea
                 value={value}
@@ -314,8 +290,7 @@ function Index() {
                 <div
                   key={i}
                   className={
-                    "h-px flex-1 transition-colors " +
-                    (i <= step ? "bg-primary" : "bg-border")
+                    "h-px flex-1 transition-colors " + (i <= step ? "bg-primary" : "bg-border")
                   }
                 />
               ))}
