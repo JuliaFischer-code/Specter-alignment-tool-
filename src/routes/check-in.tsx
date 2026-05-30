@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { useCommitment } from "@/lib/commitment-store";
+import { analyzeCheckIn, type CheckInAnalysis } from "@/lib/check-in.functions";
 
 export const Route = createFileRoute("/check-in")({
   head: () => ({
@@ -79,13 +81,19 @@ function CheckInPage() {
   const { data, hydrated } = useCommitment();
   const [scores, setScores] = useState<Record<string, Status>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [currentValues, setCurrentValues] = useState<Record<string, string>>({});
+  const [analysis, setAnalysis] = useState<CheckInAnalysis | null>(null);
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const runAnalysis = useServerFn(analyzeCheckIn);
 
   const verdict = useMemo<Status>(() => {
+    if (analysis) return analysis.overallVerdict;
     const vals = Object.values(scores);
     if (vals.includes("breach")) return "breach";
     if (vals.includes("watch")) return "watch";
     return "on-track";
-  }, [scores]);
+  }, [scores, analysis]);
 
   if (!hydrated) return <AppShell><div className="h-screen" /></AppShell>;
 
@@ -110,6 +118,49 @@ function CheckInPage() {
 
   const completed = Object.keys(scores).length;
   const total = dimensions.length;
+
+  async function handleAnalyze() {
+    if (!data) return;
+    setRunning(true);
+    setError(null);
+    try {
+      const result = await runAnalysis({
+        data: {
+          pilotName: data.pilotName,
+          sponsor: data.sponsor,
+          hypothesis: data.hypothesis,
+          killCriteria: data.killCriteria,
+          successSignals: data.successSignals,
+          dimensions: dimensions.map((d) => ({
+            key: d.key,
+            label: d.label,
+            original: data[d.key] || "",
+            current: currentValues[d.key] || "",
+            selfScore: scores[d.key],
+            notes: notes[d.key],
+          })),
+        },
+      });
+      setAnalysis(result);
+      const next: Record<string, Status> = {};
+      for (const dim of result.dimensions) next[dim.key] = dim.verdict;
+      setScores((prev) => ({ ...prev, ...next }));
+    } catch (e: any) {
+      setError(e?.message || "Analysis failed");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  const perDimAnalysis = useMemo(() => {
+    const map: Record<string, { verdict: Status; driftSummary: string }> = {};
+    if (analysis) {
+      for (const d of analysis.dimensions) {
+        map[d.key] = { verdict: d.verdict, driftSummary: d.driftSummary };
+      }
+    }
+    return map;
+  }, [analysis]);
 
   return (
     <AppShell>
@@ -168,6 +219,17 @@ function CheckInPage() {
               >
                 Open the commitment document →
               </Link>
+
+              <button
+                onClick={handleAnalyze}
+                disabled={running}
+                className="mt-6 block w-full bg-foreground px-4 py-3 text-[12px] font-mono uppercase tracking-wider text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {running ? "Analyzing…" : analysis ? "Re-run AI analysis" : "Run AI accountability review"}
+              </button>
+              {error && (
+                <p className="mt-3 text-[12px] text-destructive">{error}</p>
+              )}
             </div>
           </aside>
 
@@ -175,7 +237,8 @@ function CheckInPage() {
           <div className="col-span-12 lg:col-span-8 space-y-6">
             {dimensions.map((d, i) => {
               const original = data[d.key];
-              const current = scores[d.key];
+              const selfScore = scores[d.key];
+              const dimA = perDimAnalysis[d.key];
               return (
                 <div
                   key={d.key}
@@ -193,14 +256,14 @@ function CheckInPage() {
                         {d.question}
                       </p>
                     </div>
-                    {current && (
+                    {selfScore && (
                       <span
                         className={
                           "shrink-0 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-background " +
-                          statusMeta[current].bar
+                          statusMeta[selfScore].bar
                         }
                       >
-                        {statusMeta[current].label}
+                        {statusMeta[selfScore].label}
                       </span>
                     )}
                   </div>
@@ -216,9 +279,40 @@ function CheckInPage() {
                     </p>
                   </div>
 
+                  <div className="mt-4">
+                    <label className="eyebrow mb-2 block">Current value</label>
+                    <textarea
+                      value={currentValues[d.key] || ""}
+                      onChange={(e) =>
+                        setCurrentValues((c) => ({ ...c, [d.key]: e.target.value }))
+                      }
+                      placeholder="What is the actual value today? (number, status, decision)"
+                      rows={2}
+                      className="w-full resize-none border border-border bg-background p-3 text-[14px] outline-none transition-colors focus:border-primary"
+                    />
+                  </div>
+
+                  {dimA && (
+                    <div
+                      className={
+                        "mt-4 border-l-2 p-4 " +
+                        (dimA.verdict === "breach"
+                          ? "border-destructive bg-destructive/5"
+                          : dimA.verdict === "watch"
+                            ? "border-yellow-600 bg-yellow-600/5"
+                            : "border-primary bg-primary/5")
+                      }
+                    >
+                      <div className="eyebrow mb-2">AI drift analysis</div>
+                      <p className="text-[14px] leading-relaxed text-foreground">
+                        {dimA.driftSummary}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="mt-6 flex flex-wrap gap-2">
                     {(Object.keys(statusMeta) as Status[]).map((s) => {
-                      const active = current === s;
+                      const active = selfScore === s;
                       return (
                         <button
                           key={s}
@@ -254,6 +348,43 @@ function CheckInPage() {
           </div>
         </div>
       </section>
+
+      {analysis && (
+        <section className="mx-auto mt-12 max-w-[1240px] px-8">
+          <div
+            className={
+              "border bg-card p-10 lg:p-14 " +
+              (analysis.overallVerdict === "breach"
+                ? "border-destructive"
+                : analysis.overallVerdict === "watch"
+                  ? "border-yellow-600"
+                  : "border-primary")
+            }
+          >
+            <div className="eyebrow">Accountability response</div>
+            <h2 className="mt-3 font-serif text-[32px] leading-tight">
+              {analysis.headline}
+            </h2>
+
+            {analysis.violatedKillCriteria.length > 0 && (
+              <div className="mt-6 border border-destructive bg-destructive/5 p-5">
+                <div className="eyebrow text-destructive">
+                  Violated kill criteria
+                </div>
+                <ul className="mt-3 list-disc space-y-2 pl-5 text-[14px] text-foreground">
+                  {analysis.violatedKillCriteria.map((k, i) => (
+                    <li key={i}>{k}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <pre className="mt-6 whitespace-pre-wrap font-sans text-[15px] leading-relaxed text-foreground">
+              {analysis.accountabilityResponse}
+            </pre>
+          </div>
+        </section>
+      )}
 
       <div className="h-24" />
     </AppShell>
