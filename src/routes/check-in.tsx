@@ -349,6 +349,43 @@ function CheckInPage() {
         </div>
       </section>
 
+      {analysis && (
+        <section className="mx-auto mt-12 max-w-[1240px] px-8">
+          <div
+            className={
+              "border bg-card p-10 lg:p-14 " +
+              (analysis.overallVerdict === "breach"
+                ? "border-destructive"
+                : analysis.overallVerdict === "watch"
+                  ? "border-yellow-600"
+                  : "border-primary")
+            }
+          >
+            <div className="eyebrow">Accountability response</div>
+            <h2 className="mt-3 font-serif text-[32px] leading-tight">
+              {analysis.headline}
+            </h2>
+
+            {analysis.violatedKillCriteria.length > 0 && (
+              <div className="mt-6 border border-destructive bg-destructive/5 p-5">
+                <div className="eyebrow text-destructive">
+                  Violated kill criteria
+                </div>
+                <ul className="mt-3 list-disc space-y-2 pl-5 text-[14px] text-foreground">
+                  {analysis.violatedKillCriteria.map((k, i) => (
+                    <li key={i}>{k}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <pre className="mt-6 whitespace-pre-wrap font-sans text-[15px] leading-relaxed text-foreground">
+              {analysis.accountabilityResponse}
+            </pre>
+          </div>
+        </section>
+      )}
+
       <div className="h-24" />
     </AppShell>
   );
