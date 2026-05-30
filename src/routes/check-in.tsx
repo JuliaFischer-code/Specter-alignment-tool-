@@ -81,7 +81,7 @@ function CheckInPage() {
   const { data, hydrated } = useCommitment();
   const [scores, setScores] = useState<Record<string, Status>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
-  const [current, setCurrent] = useState<Record<string, string>>({});
+  const [currentValues, setCurrentValues] = useState<Record<string, string>>({});
   const [analysis, setAnalysis] = useState<CheckInAnalysis | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,7 +135,7 @@ function CheckInPage() {
             key: d.key,
             label: d.label,
             original: data[d.key] || "",
-            current: current[d.key] || "",
+            current: currentValues[d.key] || "",
             selfScore: scores[d.key],
             notes: notes[d.key],
           })),
@@ -237,7 +237,7 @@ function CheckInPage() {
           <div className="col-span-12 lg:col-span-8 space-y-6">
             {dimensions.map((d, i) => {
               const original = data[d.key];
-              const current = scores[d.key];
+              const selfScore = scores[d.key];
               const dimA = perDimAnalysis[d.key];
               return (
                 <div
@@ -256,14 +256,14 @@ function CheckInPage() {
                         {d.question}
                       </p>
                     </div>
-                    {current && (
+                    {selfScore && (
                       <span
                         className={
                           "shrink-0 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-background " +
-                          statusMeta[current].bar
+                          statusMeta[selfScore].bar
                         }
                       >
-                        {statusMeta[current].label}
+                        {statusMeta[selfScore].label}
                       </span>
                     )}
                   </div>
@@ -282,15 +282,37 @@ function CheckInPage() {
                   <div className="mt-4">
                     <label className="eyebrow mb-2 block">Current value</label>
                     <textarea
-                      value={(useStateCurrent(d.key))}
-                      onChange={() => {}}
-                      hidden
+                      value={currentValues[d.key] || ""}
+                      onChange={(e) =>
+                        setCurrentValues((c) => ({ ...c, [d.key]: e.target.value }))
+                      }
+                      placeholder="What is the actual value today? (number, status, decision)"
+                      rows={2}
+                      className="w-full resize-none border border-border bg-background p-3 text-[14px] outline-none transition-colors focus:border-primary"
                     />
                   </div>
 
+                  {dimA && (
+                    <div
+                      className={
+                        "mt-4 border-l-2 p-4 " +
+                        (dimA.verdict === "breach"
+                          ? "border-destructive bg-destructive/5"
+                          : dimA.verdict === "watch"
+                            ? "border-yellow-600 bg-yellow-600/5"
+                            : "border-primary bg-primary/5")
+                      }
+                    >
+                      <div className="eyebrow mb-2">AI drift analysis</div>
+                      <p className="text-[14px] leading-relaxed text-foreground">
+                        {dimA.driftSummary}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="mt-6 flex flex-wrap gap-2">
                     {(Object.keys(statusMeta) as Status[]).map((s) => {
-                      const active = current === s;
+                      const active = selfScore === s;
                       return (
                         <button
                           key={s}
