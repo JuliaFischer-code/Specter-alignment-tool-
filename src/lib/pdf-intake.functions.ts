@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { createOpenRouterProvider } from "./ai-gateway.server";
 
 const Input = z.object({
   pdfText: z.string().min(1),
@@ -27,9 +27,16 @@ export type PdfExtractResult = {
 export const extractFromPdf = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }): Promise<PdfExtractResult> => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const key = process.env.OPENROUTER_API_KEY;
+
+    console.log("PDF Intake using OpenRouter");
+    console.log("Key exists:", !!key);
+
+    if (!key) {
+      throw new Error("Missing OPENROUTER_API_KEY");
+    }
+
+    const gateway = createOpenRouterProvider(key);
 
     const system = `You are extracting structured information from a business document to pre-fill a pre-commitment form for an AI pilot.
 
@@ -53,19 +60,38 @@ Questions:
 Document:
 ${data.pdfText}`;
 
-    const { output } = await generateText({
-      model: gateway("google/gemini-3-flash-preview"),
-      system,
-      prompt,
-      output: Output.object({ schema: ExtractedAnswers }),
-    });
+    try {
+      const { output } = await generateText({
+        model: gateway("google/gemini-2.5-flash"),
+        system,
+        prompt,
+        output: Output.object({ schema: ExtractedAnswers }),
+      });
 
-    const missing = (Object.keys(output) as (keyof typeof output)[]).filter(
-      (k) => !output[k] || output[k].trim() === ""
-    );
+      const missing = (Object.keys(output) as (keyof typeof output)[]).filter(
+        (k) => !output[k] || output[k].trim() === "",
+      );
 
-    return {
-      answers: output,
-      missing,
-    };
+      return {
+        answers: output,
+        missing,
+      };
+    } catch (error) {
+      console.error("PDF INTAKE ERROR:", error);
+
+      return {
+        answers: {},
+        missing: [
+          "pilotName",
+          "sponsor",
+          "hypothesis",
+          "budgetCeiling",
+          "timeBox",
+          "reputationalRisk",
+          "opportunityCost",
+          "killCriteria",
+          "successSignals",
+        ],
+      };
+    }
   });
