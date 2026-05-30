@@ -95,6 +95,16 @@ function CheckInPage() {
     return "on-track";
   }, [scores, analysis]);
 
+  const perDimAnalysis = useMemo(() => {
+    const map: Record<string, { verdict: Status; driftSummary: string }> = {};
+    if (analysis) {
+      for (const d of analysis.dimensions) {
+        map[d.key] = { verdict: d.verdict, driftSummary: d.driftSummary };
+      }
+    }
+    return map;
+  }, [analysis]);
+
   if (!hydrated) return <AppShell><div className="h-screen" /></AppShell>;
 
   if (!data || !data.createdAt) {
@@ -152,16 +162,6 @@ function CheckInPage() {
     }
   }
 
-  const perDimAnalysis = useMemo(() => {
-    const map: Record<string, { verdict: Status; driftSummary: string }> = {};
-    if (analysis) {
-      for (const d of analysis.dimensions) {
-        map[d.key] = { verdict: d.verdict, driftSummary: d.driftSummary };
-      }
-    }
-    return map;
-  }, [analysis]);
-
   return (
     <AppShell>
       <PageHeader
@@ -172,7 +172,6 @@ function CheckInPage() {
 
       <section className="mx-auto max-w-[1240px] px-8">
         <div className="grid grid-cols-12 gap-10">
-          {/* Verdict rail */}
           <aside className="col-span-12 lg:col-span-4">
             <div className="sticky top-8 border border-border bg-card p-8">
               <div className="eyebrow">Live verdict</div>
@@ -233,17 +232,13 @@ function CheckInPage() {
             </div>
           </aside>
 
-          {/* Scoring */}
           <div className="col-span-12 lg:col-span-8 space-y-6">
             {dimensions.map((d, i) => {
               const original = data[d.key];
               const selfScore = scores[d.key];
               const dimA = perDimAnalysis[d.key];
               return (
-                <div
-                  key={d.key}
-                  className="border border-border bg-card p-8"
-                >
+                <div key={d.key} className="border border-border bg-card p-8">
                   <div className="flex items-start justify-between gap-6">
                     <div>
                       <span className="number-tag">

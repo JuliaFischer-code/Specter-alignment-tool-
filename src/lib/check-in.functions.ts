@@ -1,15 +1,56 @@
+import { createServerFn } from "@tanstack/react-start";
+import { generateText, Output } from "ai";
+import { z } from "zod";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+
+function createOpenRouterProvider(apiKey: string) {
+  return createOpenAICompatible({
+    name: "openrouter",
+    baseURL: "https://openrouter.ai/api/v1",
+    headers: { "Authorization": `Bearer ${apiKey}` },
+  });
+}
+
+const DimensionInput = z.object({
+  key: z.string(),
+  label: z.string(),
+  original: z.string(),
+  current: z.string(),
+  selfScore: z.enum(["on-track", "watch", "breach"]).optional(),
+  notes: z.string().optional(),
+});
+
+const Input = z.object({
+  pilotName: z.string(),
+  sponsor: z.string(),
+  hypothesis: z.string(),
+  killCriteria: z.string(),
+  successSignals: z.string(),
+  dimensions: z.array(DimensionInput).min(1),
+});
+
+const FindingSchema = z.object({
+  dimensions: z.array(
+    z.object({
+      key: z.string(),
+      label: z.string(),
+      verdict: z.enum(["on-track", "watch", "breach"]),
+      driftSummary: z.string(),
+    }),
+  ),
+  violatedKillCriteria: z.array(z.string()),
+  overallVerdict: z.enum(["on-track", "watch", "breach"]),
+  headline: z.string(),
+  accountabilityResponse: z.string(),
+});
+
+export type CheckInAnalysis = z.infer<typeof FindingSchema>;
+
 export const analyzeCheckIn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
     const key = process.env.OPENROUTER_API_KEY;
-
-    console.log("Using OpenRouter");
-    console.log("Key exists:", !!key);
-
-    if (!key) {
-      throw new Error("Missing OPENROUTER_API_KEY");
-    }
-
+    if (!key) throw new Error("Missing OPENROUTER_API_KEY");
     const gateway = createOpenRouterProvider(key);
 
     const system = `You are a disciplined pilot-governance reviewer in the tradition of effectuation and affordable-loss reasoning. Your job is NOT to summarize. Your job is to hold the team accountable to the commitment they wrote at kickoff.
@@ -22,41 +63,21 @@ Rules:
 - The accountability response must be blunt, specific, and end with a directive: "stop", "explicitly recommit to a new written ceiling of X", or "continue inside the existing envelope".
 - Do not soften. Do not invent data. If a current value is missing, say so.`;
 
-    const userPayload = JSON.stringify(
-      {
-        pilot: data.pilotName,
-        sponsor: data.sponsor,
-        hypothesis: data.hypothesis,
-        killCriteria: data.killCriteria,
-        successSignals: data.successSignals,
-        dimensions: data.dimensions,
-      },
-      null,
-      2,
-    );
+    const userPayload = JSON.stringify({
+      pilot: data.pilotName,
+      sponsor: data.sponsor,
+      hypothesis: data.hypothesis,
+      killCriteria: data.killCriteria,
+      successSignals: data.successSignals,
+      dimensions: data.dimensions,
+    }, null, 2);
 
-    try {
-      const { output } = await generateText({
-        model: gateway("google/gemini-2.5-flash"),
-        system,
-        prompt: `Commitment + current check-in data:\n\n${userPayload}\n\nProduce the structured accountability analysis.`,
-        output: Output.object({ schema: FindingSchema }),
-      });
+    const { output } = await generateText({
+      model: gateway("google/gemini-2.5-flash"),
+      system,
+      prompt: `Commitment + current check-in data:\n\n${userPayload}\n\nProduce the structured accountability analysis.`,
+      output: Output.object({ schema: FindingSchema }),
+    });
 
-      console.log("AI RESPONSE");
-      console.dir(output, { depth: null });
-
-      return output;
-    } catch (error) {
-      console.error("CHECK-IN ERROR:", error);
-
-      return {
-        dimensions: [],
-        violatedKillCriteria: [],
-        overallVerdict: "watch",
-        headline: "Analysis unavailable",
-        accountabilityResponse:
-          "AI analysis could not be completed. Please verify the OpenRouter API key, model access, and response schema.",
-      };
-    }
+    return output;
   });
