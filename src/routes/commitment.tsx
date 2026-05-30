@@ -24,7 +24,7 @@ export const Route = createFileRoute("/commitment")({
 
 const sections: {
   title: string;
-  fields: { id: keyof typeof promptScript[number]["id"] | string; label: string }[];
+  fields: { id: string; label: string }[];
 }[] = [
   {
     title: "I. Identification",
