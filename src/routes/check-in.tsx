@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { AppShell, PageHeader } from "@/components/app-shell";
-import { useCommitment } from "@/lib/commitment-store";
+import { useCommitment, useCheckIns, type CheckInEntry } from "@/lib/commitment-store";
 import { analyzeCheckIn, type CheckInAnalysis } from "@/lib/check-in.functions";
 
 export const Route = createFileRoute("/check-in")({
@@ -31,59 +31,149 @@ const dimensions: {
   key: "budgetCeiling" | "timeBox" | "reputationalRisk" | "opportunityCost" | "killCriteria";
   label: string;
   question: string;
+  hint: string;
 }[] = [
   {
     key: "budgetCeiling",
     label: "Budget burn vs ceiling",
     question: "How much of the affordable-loss ceiling has been consumed?",
+    hint: "Enter amount spent so far, e.g. '€45.000'",
   },
   {
     key: "timeBox",
     label: "Time elapsed vs box",
     question: "How much of the original time-box has elapsed?",
+    hint: "e.g. '3 of 6 months' or '8 weeks in'",
   },
   {
     key: "killCriteria",
     label: "Kill criteria proximity",
     question: "Are any of the documented stop-conditions getting close?",
+    hint: "e.g. '1 of 5 data incidents occurred' or 'none triggered yet'",
   },
   {
     key: "reputationalRisk",
     label: "Reputational exposure",
     question: "Has the surface area for reputational risk grown since kickoff?",
+    hint: "e.g. 'No change' or 'Now customer-facing in 2 regions'",
   },
   {
     key: "opportunityCost",
     label: "Opportunity cost",
     question: "Is the displaced work still acceptable to the team?",
+    hint: "e.g. 'Team still aligned' or 'Migration delay now causing friction'",
   },
 ];
 
-const statusMeta: Record<Status, { label: string; bar: string; dot: string }> = {
+const statusMeta: Record<Status, { label: string; bar: string; dot: string; bg: string }> = {
   "on-track": {
     label: "On track",
     bar: "bg-primary",
     dot: "bg-primary",
+    bg: "bg-primary/10 text-primary",
   },
   watch: {
     label: "Watch",
     bar: "bg-yellow-600",
     dot: "bg-yellow-600",
+    bg: "bg-yellow-600/10 text-yellow-700",
   },
   breach: {
     label: "Breach",
     bar: "bg-destructive",
     dot: "bg-destructive",
+    bg: "bg-destructive/10 text-destructive",
   },
 };
 
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function CheckInTimeline({ checkIns }: { checkIns: CheckInEntry[] }) {
+  if (checkIns.length === 0) return null;
+
+  return (
+    <section className="mx-auto max-w-[1240px] px-8 mb-10">
+      <div className="border border-border bg-card p-8">
+        <div className="eyebrow mb-6">Check-in history</div>
+        <div className="relative">
+          {/* Timeline line */}
+          <div className="absolute left-[11px] top-0 bottom-0 w-px bg-border" />
+          <div className="space-y-6">
+            {checkIns.map((entry, i) => {
+              const isLatest = i === checkIns.length - 1;
+              const meta = statusMeta[entry.verdict];
+              return (
+                <div key={entry.id} className="flex items-start gap-6 pl-8 relative">
+                  {/* Dot */}
+                  <span
+                    className={`absolute left-0 top-1 h-[23px] w-[23px] rounded-full border-2 border-background flex items-center justify-center ${meta.dot}`}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-[13px] font-mono text-muted-foreground">
+                        {formatDate(entry.createdAt)}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 text-[11px] font-mono uppercase tracking-wider rounded-sm ${meta.bg}`}
+                      >
+                        {isLatest ? "Latest · " : ""}{meta.label}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex gap-1.5 flex-wrap">
+                      {dimensions.map((d) => {
+                        const score = entry.scores[d.key];
+                        if (!score) return null;
+                        const m = statusMeta[score];
+                        return (
+                          <span
+                            key={d.key}
+                            className="flex items-center gap-1 text-[11px] text-muted-foreground"
+                          >
+                            <span className={`h-1.5 w-1.5 rounded-full ${m.dot}`} />
+                            {d.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    {/* Current values summary */}
+                    <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1">
+                      {dimensions.map((d) => {
+                        const val = entry.currentValues[d.key];
+                        if (!val) return null;
+                        return (
+                          <div key={d.key} className="text-[12px]">
+                            <span className="text-muted-foreground">{d.label}: </span>
+                            <span className="text-foreground">{val}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CheckInPage() {
   const { data, hydrated } = useCommitment();
+  const { checkIns, add: addCheckIn } = useCheckIns();
   const [scores, setScores] = useState<Record<string, Status>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [currentValues, setCurrentValues] = useState<Record<string, string>>({});
   const [analysis, setAnalysis] = useState<CheckInAnalysis | null>(null);
   const [running, setRunning] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const runAnalysis = useServerFn(analyzeCheckIn);
 
@@ -129,6 +219,20 @@ function CheckInPage() {
   const completed = Object.keys(scores).length;
   const total = dimensions.length;
 
+  function handleSaveCheckIn(overrideVerdict?: Status) {
+    const entry: CheckInEntry = {
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      verdict: overrideVerdict || verdict,
+      scores,
+      currentValues,
+      notes,
+    };
+    addCheckIn(entry);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  }
+
   async function handleAnalyze() {
     if (!data) return;
     setRunning(true);
@@ -155,6 +259,8 @@ function CheckInPage() {
       const next: Record<string, Status> = {};
       for (const dim of result.dimensions) next[dim.key] = dim.verdict;
       setScores((prev) => ({ ...prev, ...next }));
+      // Auto-save after AI analysis
+      handleSaveCheckIn(result.overallVerdict);
     } catch (e: any) {
       setError(e?.message || "Analysis failed");
     } finally {
@@ -170,8 +276,12 @@ function CheckInPage() {
         lede="Every check-in compares the live pilot to the commitment document — never to a moving definition of success. Score each dimension, capture context, and let the verdict surface."
       />
 
+      {/* Timeline */}
+      <CheckInTimeline checkIns={checkIns} />
+
       <section className="mx-auto max-w-[1240px] px-8">
         <div className="grid grid-cols-12 gap-10">
+          {/* Verdict rail */}
           <aside className="col-span-12 lg:col-span-4">
             <div className="sticky top-8 border border-border bg-card p-8">
               <div className="eyebrow">Live verdict</div>
@@ -226,19 +336,43 @@ function CheckInPage() {
               >
                 {running ? "Analyzing…" : analysis ? "Re-run AI analysis" : "Run AI accountability review"}
               </button>
+
+              <button
+                onClick={() => handleSaveCheckIn()}
+                disabled={completed === 0}
+                className="mt-3 block w-full border border-border px-4 py-3 text-[12px] font-mono uppercase tracking-wider text-foreground transition-colors hover:border-foreground/60 disabled:opacity-30"
+              >
+                {saved ? "✓ Saved to history" : "Save check-in"}
+              </button>
+
+              {checkIns.length > 0 && (
+                <p className="mt-3 text-[11px] text-muted-foreground">
+                  {checkIns.length} check-in{checkIns.length > 1 ? "s" : ""} recorded
+                </p>
+              )}
+
               {error && (
                 <p className="mt-3 text-[12px] text-destructive">{error}</p>
               )}
             </div>
           </aside>
 
+          {/* Scoring */}
           <div className="col-span-12 lg:col-span-8 space-y-6">
             {dimensions.map((d, i) => {
               const original = data[d.key];
               const selfScore = scores[d.key];
               const dimA = perDimAnalysis[d.key];
+
+              // Find last value from history for this dimension
+              const lastEntry = checkIns.length > 0 ? checkIns[checkIns.length - 1] : null;
+              const lastValue = lastEntry?.currentValues[d.key];
+
               return (
-                <div key={d.key} className="border border-border bg-card p-8">
+                <div
+                  key={d.key}
+                  className="border border-border bg-card p-8"
+                >
                   <div className="flex items-start justify-between gap-6">
                     <div>
                       <span className="number-tag">
@@ -274,14 +408,26 @@ function CheckInPage() {
                     </p>
                   </div>
 
-                  <div className="mt-4">
+                  {lastValue && (
+                    <div className="mt-3 border-l-2 border-border bg-muted/20 p-4">
+                      <div className="eyebrow mb-1">Last check-in</div>
+                      <p className="text-[13px] text-muted-foreground">
+                        {lastValue}
+                        <span className="ml-2 text-[11px]">
+                          · {formatDate(lastEntry!.createdAt)}
+                        </span>
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-3">
                     <label className="eyebrow mb-2 block">Current value</label>
                     <textarea
                       value={currentValues[d.key] || ""}
                       onChange={(e) =>
                         setCurrentValues((c) => ({ ...c, [d.key]: e.target.value }))
                       }
-                      placeholder="What is the actual value today? (number, status, decision)"
+                      placeholder={d.hint}
                       rows={2}
                       className="w-full resize-none border border-border bg-background p-3 text-[14px] outline-none transition-colors focus:border-primary"
                     />

@@ -1,15 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-
-function createOpenRouterProvider(apiKey: string) {
-  return createOpenAICompatible({
-    name: "openrouter",
-    baseURL: "https://openrouter.ai/api/v1",
-    headers: { "Authorization": `Bearer ${apiKey}` },
-  });
-}
+import { createOpenRouterProvider } from "./ai-gateway.server";
 
 const DimensionInput = z.object({
   key: z.string(),

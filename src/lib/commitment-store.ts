@@ -1,5 +1,37 @@
 import { useEffect, useState } from "react";
 
+export interface CheckInEntry {
+  id: string;
+  createdAt: string;
+  verdict: "on-track" | "watch" | "breach";
+  scores: Record<string, "on-track" | "watch" | "breach">;
+  currentValues: Record<string, string>;
+  notes: Record<string, string>;
+}
+
+const CHECKINS_KEY = "uncertainty-navigator/check-ins-v1";
+
+export function useCheckIns() {
+  const [checkIns, setCheckIns] = useState<CheckInEntry[]>([]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(CHECKINS_KEY);
+      if (raw) setCheckIns(JSON.parse(raw) as CheckInEntry[]);
+    } catch {}
+  }, []);
+
+  const add = (entry: CheckInEntry) => {
+    setCheckIns((prev) => {
+      const next = [...prev, entry];
+      window.localStorage.setItem(CHECKINS_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  return { checkIns, add };
+}
+
 export interface CommitmentData {
   pilotName: string;
   sponsor: string;
