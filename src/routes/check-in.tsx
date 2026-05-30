@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { useCommitment } from "@/lib/commitment-store";
+import { analyzeCheckIn, type CheckInAnalysis } from "@/lib/check-in.functions";
 
 export const Route = createFileRoute("/check-in")({
   head: () => ({
@@ -79,13 +81,19 @@ function CheckInPage() {
   const { data, hydrated } = useCommitment();
   const [scores, setScores] = useState<Record<string, Status>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [current, setCurrent] = useState<Record<string, string>>({});
+  const [analysis, setAnalysis] = useState<CheckInAnalysis | null>(null);
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const runAnalysis = useServerFn(analyzeCheckIn);
 
   const verdict = useMemo<Status>(() => {
+    if (analysis) return analysis.overallVerdict;
     const vals = Object.values(scores);
     if (vals.includes("breach")) return "breach";
     if (vals.includes("watch")) return "watch";
     return "on-track";
-  }, [scores]);
+  }, [scores, analysis]);
 
   if (!hydrated) return <AppShell><div className="h-screen" /></AppShell>;
 
@@ -110,6 +118,49 @@ function CheckInPage() {
 
   const completed = Object.keys(scores).length;
   const total = dimensions.length;
+
+  async function handleAnalyze() {
+    if (!data) return;
+    setRunning(true);
+    setError(null);
+    try {
+      const result = await runAnalysis({
+        data: {
+          pilotName: data.pilotName,
+          sponsor: data.sponsor,
+          hypothesis: data.hypothesis,
+          killCriteria: data.killCriteria,
+          successSignals: data.successSignals,
+          dimensions: dimensions.map((d) => ({
+            key: d.key,
+            label: d.label,
+            original: data[d.key] || "",
+            current: current[d.key] || "",
+            selfScore: scores[d.key],
+            notes: notes[d.key],
+          })),
+        },
+      });
+      setAnalysis(result);
+      const next: Record<string, Status> = {};
+      for (const dim of result.dimensions) next[dim.key] = dim.verdict;
+      setScores((prev) => ({ ...prev, ...next }));
+    } catch (e: any) {
+      setError(e?.message || "Analysis failed");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  const perDimAnalysis = useMemo(() => {
+    const map: Record<string, { verdict: Status; driftSummary: string }> = {};
+    if (analysis) {
+      for (const d of analysis.dimensions) {
+        map[d.key] = { verdict: d.verdict, driftSummary: d.driftSummary };
+      }
+    }
+    return map;
+  }, [analysis]);
 
   return (
     <AppShell>
@@ -168,6 +219,17 @@ function CheckInPage() {
               >
                 Open the commitment document →
               </Link>
+
+              <button
+                onClick={handleAnalyze}
+                disabled={running}
+                className="mt-6 block w-full bg-foreground px-4 py-3 text-[12px] font-mono uppercase tracking-wider text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {running ? "Analyzing…" : analysis ? "Re-run AI analysis" : "Run AI accountability review"}
+              </button>
+              {error && (
+                <p className="mt-3 text-[12px] text-destructive">{error}</p>
+              )}
             </div>
           </aside>
 
@@ -176,6 +238,7 @@ function CheckInPage() {
             {dimensions.map((d, i) => {
               const original = data[d.key];
               const current = scores[d.key];
+              const dimA = perDimAnalysis[d.key];
               return (
                 <div
                   key={d.key}
@@ -214,6 +277,15 @@ function CheckInPage() {
                         </span>
                       )}
                     </p>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="eyebrow mb-2 block">Current value</label>
+                    <textarea
+                      value={(useStateCurrent(d.key))}
+                      onChange={() => {}}
+                      hidden
+                    />
                   </div>
 
                   <div className="mt-6 flex flex-wrap gap-2">
