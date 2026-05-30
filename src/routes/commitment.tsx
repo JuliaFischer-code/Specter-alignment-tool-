@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { promptScript, useCommitment } from "@/lib/commitment-store";
+import { useCommitment } from "@/lib/commitment-store";
 
 export const Route = createFileRoute("/commitment")({
   head: () => ({
