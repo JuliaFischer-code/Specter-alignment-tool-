@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import {
   blankCommitment,
@@ -9,6 +10,7 @@ import {
   saveCommitment,
   type CommitmentData,
 } from "@/lib/commitment-store";
+import { extractFromPdf } from "@/lib/pdf-intake.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -34,6 +36,13 @@ function Index() {
   const navigate = useNavigate();
   const [answers, setAnswers] = useState<CommitmentData>(blankCommitment);
   const [step, setStep] = useState(0);
+  const [missingFromPdf, setMissingFromPdf] = useState<string[]>([]);
+  const [pdfUploading, setPdfUploading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [pdfFileName, setPdfFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const runExtract = useServerFn(extractFromPdf);
+
   const total = promptScript.length;
   const current = promptScript[step];
   const value = answers[current.id];
@@ -59,7 +68,84 @@ function Index() {
 
   const loadSample = () => {
     setAnswers(sampleCommitment);
+    setMissingFromPdf([]);
     setStep(total - 1);
+  };
+
+  async function handlePdfUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPdfError(null);
+    setPdfUploading(true);
+    setPdfFileName(file.name);
+
+    try {
+      // Extract text from PDF using FileReader + pdf.js-style base64
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8 = new Uint8Array(arrayBuffer);
+
+      // Convert to base64 to send to server
+      let binary = "";
+      for (let i = 0; i < uint8.length; i++) {
+        binary += String.fromCharCode(uint8[i]);
+      }
+      const base64 = btoa(binary);
+
+      // We send the raw base64; the server fn will extract text via a simple approach
+      // For now we use a text extraction fallback: try to decode readable strings
+      const textDecoder = new TextDecoder("utf-8", { fatal: false });
+      const rawText = textDecoder.decode(uint8);
+
+      // Clean up binary noise — keep readable ASCII runs of 4+ chars
+      const pdfText = rawText
+        .replace(/[^\x20-\x7E\n\r\t]/g, " ")
+        .replace(/ {3,}/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim()
+        .slice(0, 12000); // cap to avoid token overflow
+
+      if (pdfText.length < 100) {
+        throw new Error(
+          "Could not extract readable text from this PDF. Try a text-based PDF (not a scanned image).",
+        );
+      }
+
+      const result = await runExtract({ data: { pdfText } });
+
+      // Merge extracted answers into state (only overwrite if non-empty)
+      setAnswers((prev) => {
+        const next = { ...prev };
+        for (const [key, val] of Object.entries(result.answers)) {
+          if (val && val.trim().length > 0) {
+            (next as any)[key] = val;
+          }
+        }
+        return next;
+      });
+
+      setMissingFromPdf(result.missing);
+
+      // Jump to first missing question if any, otherwise step 0
+      if (result.missing.length > 0) {
+        const firstMissingIndex = promptScript.findIndex((p) =>
+          result.missing.includes(p.id),
+        );
+        if (firstMissingIndex >= 0) setStep(firstMissingIndex);
+      }
+    } catch (err: any) {
+      setPdfError(err?.message || "PDF extraction failed.");
+    } finally {
+      setPdfUploading(false);
+      // Reset input so same file can be re-uploaded
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  const dotColor = (id: string, done: boolean) => {
+    if (done) return "bg-primary"; // green
+    if (missingFromPdf.includes(id)) return "bg-destructive"; // red — AI couldn't find it
+    return "bg-border"; // default grey
   };
 
   return (
@@ -97,8 +183,8 @@ function Index() {
                         <span className="flex-1 leading-snug">{p.question}</span>
                         <span
                           className={
-                            "mt-1 h-1.5 w-1.5 shrink-0 rounded-full " +
-                            (done ? "bg-primary" : "bg-border")
+                            "mt-1 h-1.5 w-1.5 shrink-0 rounded-full transition-colors " +
+                            dotColor(p.id, done)
                           }
                           aria-hidden
                         />
@@ -115,6 +201,56 @@ function Index() {
 
           {/* Conversation panel */}
           <div className="col-span-12 lg:col-span-8">
+
+            {/* PDF Upload Banner */}
+            <div className="mb-4 border border-border bg-card p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div className="eyebrow mb-1">Import from document</div>
+                  <p className="text-[12px] text-muted-foreground">
+                    Upload a PDF and we'll pre-fill what we can find. Missing answers will be flagged in red.
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf"
+                    onChange={handlePdfUpload}
+                    className="hidden"
+                    id="pdf-upload"
+                  />
+                  <label
+                    htmlFor="pdf-upload"
+                    className={
+                      "cursor-pointer border border-border px-4 py-2 text-[12px] font-mono uppercase tracking-wider transition-colors " +
+                      (pdfUploading
+                        ? "opacity-50 pointer-events-none bg-muted text-muted-foreground"
+                        : "bg-background text-foreground hover:border-foreground/60")
+                    }
+                  >
+                    {pdfUploading ? "Extracting…" : "Upload PDF"}
+                  </label>
+                </div>
+              </div>
+
+              {pdfFileName && !pdfUploading && !pdfError && (
+                <div className="mt-3 flex items-center gap-2 text-[12px] text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <span>{pdfFileName} imported</span>
+                  {missingFromPdf.length > 0 && (
+                    <span className="text-destructive">
+                      · {missingFromPdf.length} question{missingFromPdf.length > 1 ? "s" : ""} not found in document
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {pdfError && (
+                <p className="mt-3 text-[12px] text-destructive">{pdfError}</p>
+              )}
+            </div>
+
             <div className="border border-border bg-card p-10">
               <div className="flex items-center justify-between">
                 <span className="number-tag">
