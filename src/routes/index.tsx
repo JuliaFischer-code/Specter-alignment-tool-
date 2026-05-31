@@ -15,7 +15,7 @@ import { extractFromPdf } from "@/lib/pdf-intake.functions";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Uncertainty Navigator — Define Affordable Loss" },
+      { title: "Uncertainty Navigator - Define Affordable Loss" },
       {
         name: "description",
         content:
