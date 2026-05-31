@@ -358,15 +358,11 @@ function Index() {
 }
 
 const BH_CSS = `
-  @keyframes bhGridDrift {
-    0%   { transform: perspective(700px) rotateX(68deg) translateY(-10%) scale(1.3); }
-    100% { transform: perspective(700px) rotateX(68deg) translateY(32%)  scale(1.6); }
-  }
-  @keyframes bhOrbitCW  { to { transform: rotate( 360deg); } }
-  @keyframes bhOrbitCCW { to { transform: rotate(-360deg); } }
-  @keyframes bhCenterGlow {
-    0%, 100% { box-shadow: 0 0 40px 14px rgba(0,200,150,.10), 0 0 90px  40px rgba(0, 80, 80,.07); }
-    50%       { box-shadow: 0 0 60px 22px rgba(0,255,204,.20), 0 0 130px 65px rgba(0,110,110,.13); }
+  @keyframes bhRingCW  { to { transform: rotate( 360deg); } }
+  @keyframes bhRingCCW { to { transform: rotate(-360deg); } }
+  @keyframes bhGridPulse {
+    0%, 100% { opacity: 0.28; }
+    50%       { opacity: 0.40; }
   }
   @keyframes bhExpand {
     0%   { transform: translate(-50%,-50%) scale(1);  }
@@ -387,13 +383,11 @@ const BH_CSS = `
 `;
 
 const BH_RINGS = [
-  { rx: 460, ry: 128, stroke: '#0a3a3a', sw: 0.8, dur: '24s',  cw: true  },
-  { rx: 390, ry: 108, stroke: '#0a3a3a', sw: 0.8, dur: '19s',  cw: false },
-  { rx: 320, ry: 88,  stroke: '#0d4f4f', sw: 1.2, dur: '14s',  cw: true  },
-  { rx: 250, ry: 68,  stroke: '#0d4f4f', sw: 1.5, dur: '10s',  cw: false },
-  { rx: 185, ry: 50,  stroke: '#0d5a5a', sw: 1.5, dur: '7.5s', cw: true  },
-  { rx: 120, ry: 32,  stroke: '#22c55e', sw: 2,   dur: '5s',   cw: false },
-  { rx: 68,  ry: 18,  stroke: '#00ffcc', sw: 2.5, dur: '3.2s', cw: true  },
+  { rx: 410, ry: 112, stroke: '#0a2e2e', sw: 0.8, dur: '32s', cw: true  },
+  { rx: 320, ry: 87,  stroke: '#0c3838', sw: 1,   dur: '28s', cw: false },
+  { rx: 228, ry: 62,  stroke: '#0f4444', sw: 1.3, dur: '25s', cw: true  },
+  { rx: 145, ry: 40,  stroke: '#145252', sw: 1.6, dur: '22s', cw: false },
+  { rx: 74,  ry: 21,  stroke: '#196060', sw: 1.8, dur: '20s', cw: true  },
 ];
 
 function SpecterLanding({
@@ -434,12 +428,10 @@ function SpecterLanding({
             'linear-gradient(to right,#0a3a3a 1px,transparent 1px),' +
             'linear-gradient(to bottom,#0a3a3a 1px,transparent 1px)',
           backgroundSize: '60px 60px',
-          opacity: isSelecting ? 0.15 : 0.55,
+          transform: 'perspective(700px) rotateX(68deg) translateY(-10%) scale(1.3)',
           transition: 'opacity 0.8s ease',
-          animation: isSelecting ? undefined : 'bhGridDrift 6s linear infinite alternate',
-          transform: isSelecting
-            ? 'perspective(700px) rotateX(68deg) translateY(-10%) scale(1.3)'
-            : undefined,
+          animation: isSelecting ? undefined : 'bhGridPulse 10s ease-in-out infinite',
+          opacity: isSelecting ? 0.15 : undefined,
         }} />
       </div>
 
@@ -458,23 +450,20 @@ function SpecterLanding({
               stroke={ring.stroke} strokeWidth={ring.sw} fill="none"
               style={{
                 transformOrigin: '500px 300px',
-                animation: `${ring.cw ? 'bhOrbitCW' : 'bhOrbitCCW'} ${ring.dur} linear infinite`,
+                animation: `${ring.cw ? 'bhRingCW' : 'bhRingCCW'} ${ring.dur} linear infinite`,
               }}
             />
           ))}
         </svg>
       )}
 
-      {/* Black hole center oval — phases 1 & 2 */}
-      {!isSelecting && (
+      {/* Expanding overlay — only during click transition */}
+      {isCollapsing && (
         <div style={{
           position: 'absolute', left: '50%', top: '50%',
           width: 'clamp(220px,28vw,400px)', height: 'clamp(120px,18vh,240px)',
-          background: '#000', borderRadius: '50%', zIndex: 5,
-          transform: 'translate(-50%,-50%)',
-          animation: isCollapsing
-            ? 'bhExpand 800ms ease-in forwards'
-            : 'bhCenterGlow 3.5s ease-in-out infinite',
+          background: '#000', borderRadius: '50%', zIndex: 50,
+          animation: 'bhExpand 800ms ease-in forwards',
         }} />
       )}
 

@@ -52,9 +52,10 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
     >
       <header
         className={
-          dashboardSkin
-            ? "border-b border-[#e4e0de] bg-[#f4f2f3]"
-            : "border-b border-border bg-background"
+          "sticky top-0 z-50 backdrop-blur-sm " +
+          (dashboardSkin
+            ? "border-b border-[#e4e0de] bg-[#f4f2f3]/90"
+            : "border-b border-border bg-background/90")
         }
       >
         <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between px-8">
