@@ -304,61 +304,6 @@ function Index() {
             </div>
           </div>
 
-          {/* PDF upload bar */}
-          <div className="mb-5 rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="mb-1 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
-                  <FileUp className="h-4 w-4 text-[#24bf7a]" />
-                  Import from document
-                </div>
-                <p className="text-[13px] font-medium text-[#697081]">
-                  Upload a PDF and we'll pre-fill what we can find. Missing answers will be flagged
-                  in red.
-                </p>
-              </div>
-              <div className="shrink-0">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf"
-                  onChange={handlePdfUpload}
-                  className="hidden"
-                  id="pdf-upload"
-                />
-                <label
-                  htmlFor="pdf-upload"
-                  className={
-                    "inline-flex cursor-pointer items-center gap-2 rounded-[12px] px-4 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] transition-colors " +
-                    (pdfUploading
-                      ? "pointer-events-none bg-[#f4f2f3] text-[#697081] opacity-50"
-                      : "bg-[#07122f] text-white hover:bg-[#12204a]")
-                  }
-                >
-                  <FileUp className="h-4 w-4" />
-                  {pdfUploading ? "Extracting…" : "Upload PDF"}
-                </label>
-              </div>
-            </div>
-
-            {pdfFileName && !pdfUploading && !pdfError && (
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-[12px] font-medium text-[#697081]">
-                <span className="h-2 w-2 rounded-full bg-[#24bf7a]" />
-                <span>{pdfFileName} imported</span>
-                {missingFromPdf.length > 0 && (
-                  <span className="font-semibold text-red-600">
-                    · {missingFromPdf.length} question{missingFromPdf.length > 1 ? "s" : ""} not
-                    found in document
-                  </span>
-                )}
-              </div>
-            )}
-
-            {pdfError && (
-              <p className="mt-3 text-[12px] font-semibold text-red-600">{pdfError}</p>
-            )}
-          </div>
-
           {/* Two-column main layout */}
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[65%_1fr]">
             {/* Main question card */}
@@ -382,18 +327,41 @@ function Index() {
               />
 
               <div className="mt-8 flex items-center justify-between">
-                <button
-                  onClick={() => setStep(Math.max(0, step - 1))}
-                  disabled={step === 0}
-                  className="text-[13px] font-bold text-[#697081] transition-colors hover:text-[#07122f] disabled:opacity-30"
-                >
-                  ← Previous
-                </button>
+                {step === 0 ? (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf"
+                      onChange={handlePdfUpload}
+                      className="hidden"
+                      id="pdf-upload"
+                    />
+                    <label
+                      htmlFor="pdf-upload"
+                      className={
+                        "inline-flex min-w-[180px] cursor-pointer items-center justify-center gap-2 rounded-[12px] px-6 py-3 text-[13px] font-bold tracking-wide transition-colors " +
+                        (pdfUploading
+                          ? "pointer-events-none bg-[#f4f2f3] text-[#697081] opacity-50"
+                          : "bg-[#07122f] text-white hover:bg-[#12204a]")
+                      }
+                    >
+                      {pdfUploading ? "Extracting…" : "Upload PDF"}
+                    </label>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setStep(Math.max(0, step - 1))}
+                    className="text-[13px] font-bold text-[#697081] transition-colors hover:text-[#07122f]"
+                  >
+                    ← Previous
+                  </button>
+                )}
                 <div className="flex items-center gap-3">
                   {step < total - 1 ? (
                     <button
                       onClick={next}
-                      className="inline-flex items-center gap-2 rounded-[12px] bg-[#07122f] px-6 py-3 text-[13px] font-bold tracking-wide text-white transition-transform hover:-translate-y-0.5"
+                      className="inline-flex min-w-[180px] items-center justify-center gap-2 rounded-[12px] bg-[#07122f] px-6 py-3 text-[13px] font-bold tracking-wide text-white transition-transform hover:-translate-y-0.5"
                     >
                       Next question <ArrowRight className="h-4 w-4" />
                     </button>
