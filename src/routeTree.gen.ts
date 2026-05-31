@@ -9,10 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TeamRouteImport } from './routes/team'
+import { Route as IdeaBoardRouteImport } from './routes/idea-board'
+import { Route as ExperimentCardRouteImport } from './routes/experiment-card'
 import { Route as CommitmentRouteImport } from './routes/commitment'
 import { Route as CheckInRouteImport } from './routes/check-in'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IdeaBoardRoute = IdeaBoardRouteImport.update({
+  id: '/idea-board',
+  path: '/idea-board',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExperimentCardRoute = ExperimentCardRouteImport.update({
+  id: '/experiment-card',
+  path: '/experiment-card',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CommitmentRoute = CommitmentRouteImport.update({
   id: '/commitment',
   path: '/commitment',
@@ -33,34 +51,86 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/check-in': typeof CheckInRoute
   '/commitment': typeof CommitmentRoute
+  '/experiment-card': typeof ExperimentCardRoute
+  '/idea-board': typeof IdeaBoardRoute
+  '/team': typeof TeamRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/check-in': typeof CheckInRoute
   '/commitment': typeof CommitmentRoute
+  '/experiment-card': typeof ExperimentCardRoute
+  '/idea-board': typeof IdeaBoardRoute
+  '/team': typeof TeamRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/check-in': typeof CheckInRoute
   '/commitment': typeof CommitmentRoute
+  '/experiment-card': typeof ExperimentCardRoute
+  '/idea-board': typeof IdeaBoardRoute
+  '/team': typeof TeamRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/check-in' | '/commitment'
+  fullPaths:
+    | '/'
+    | '/check-in'
+    | '/commitment'
+    | '/experiment-card'
+    | '/idea-board'
+    | '/team'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/check-in' | '/commitment'
-  id: '__root__' | '/' | '/check-in' | '/commitment'
+  to:
+    | '/'
+    | '/check-in'
+    | '/commitment'
+    | '/experiment-card'
+    | '/idea-board'
+    | '/team'
+  id:
+    | '__root__'
+    | '/'
+    | '/check-in'
+    | '/commitment'
+    | '/experiment-card'
+    | '/idea-board'
+    | '/team'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CheckInRoute: typeof CheckInRoute
   CommitmentRoute: typeof CommitmentRoute
+  ExperimentCardRoute: typeof ExperimentCardRoute
+  IdeaBoardRoute: typeof IdeaBoardRoute
+  TeamRoute: typeof TeamRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/idea-board': {
+      id: '/idea-board'
+      path: '/idea-board'
+      fullPath: '/idea-board'
+      preLoaderRoute: typeof IdeaBoardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/experiment-card': {
+      id: '/experiment-card'
+      path: '/experiment-card'
+      fullPath: '/experiment-card'
+      preLoaderRoute: typeof ExperimentCardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/commitment': {
       id: '/commitment'
       path: '/commitment'
@@ -89,6 +159,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CheckInRoute: CheckInRoute,
   CommitmentRoute: CommitmentRoute,
+  ExperimentCardRoute: ExperimentCardRoute,
+  IdeaBoardRoute: IdeaBoardRoute,
+  TeamRoute: TeamRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
