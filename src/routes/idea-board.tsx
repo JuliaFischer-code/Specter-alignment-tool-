@@ -1,7 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { format } from "date-fns";
-import { AppShell, PageHeader } from "@/components/app-shell";
+import {
+  BarChart3,
+  ClipboardCheck,
+  FileText,
+  LayoutDashboard,
+  MessageSquare,
+  PanelsTopLeft,
+  Plus,
+  Users,
+} from "lucide-react";
+import { AppShell } from "@/components/app-shell";
 import {
   useIdeas,
   getStatusColor,
@@ -52,79 +62,71 @@ function IdeaBoardPage() {
 
   return (
     <AppShell teamMode>
-      <PageHeader
-        eyebrow="Team · Step 02 · Idea board"
-        title="Active experiments."
-        lede="Each card is a bet someone made explicit. Check in weekly. Stop early if the signal isn't there."
-        teamStyle
-      />
+      <section className="mx-auto grid max-w-[1340px] grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-[280px_1fr]">
+        <IdeaBoardSidebar ideas={ideas} />
 
-      <section className="mx-auto max-w-[1240px] px-8">
-        <ProjectProgressHeader ideas={ideas} />
-        <PortfolioSnapshot ideas={ideas} />
+        <div className="min-w-0">
+          <DashboardHero ideas={ideas} />
+          <ProjectProgressHeader ideas={ideas} />
+          <PortfolioSnapshot ideas={ideas} />
 
-        {/* Tabs */}
-        <div className="mb-8 flex gap-0 border-b border-border">
-          <TabButton active={activeTab === "all"} onClick={() => setActiveTab("all")}>
-            All experiments
-          </TabButton>
-          <TabButton active={activeTab === "matches"} onClick={() => setActiveTab("matches")}>
-            Idea Matches
-            <span className="ml-2 inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-400/30 font-mono text-[10px] text-amber-700">
-              1
-            </span>
-          </TabButton>
-        </div>
-
-        {activeTab === "all" ? (
-          <>
-            {ideas.length === 0 ? (
-              <div className="py-16 text-center text-muted-foreground">
-                <p>No experiments yet.</p>
-                <Link
-                  to="/team"
-                  className="mt-4 inline-block text-[13px] text-foreground underline underline-offset-4"
-                >
-                  Start the first one →
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {ideas.map((idea) => (
-                  <IdeaRow
-                    key={idea.id}
-                    idea={idea}
-                    hasSimilar={SIMILAR_IDS.has(idea.id)}
-                    expanded={expandedId === idea.id}
-                    onToggle={() => setExpandedId(expandedId === idea.id ? null : idea.id)}
-                    onCheckIn={(checkIn, newStatus) => addCheckIn(idea.id, checkIn, newStatus)}
-                  />
-                ))}
-              </div>
-            )}
-
-            <div className="mt-12 flex items-center justify-between border-t border-border pt-6">
-              <span className="text-[12px] text-muted-foreground">
-                {ideas.length} experiment{ideas.length !== 1 ? "s" : ""} on the board
-              </span>
-              <Link
-                to="/team"
-                className="bg-primary px-5 py-2.5 text-[13px] font-medium tracking-wide text-primary-foreground transition-opacity hover:opacity-90"
-              >
-                + Add experiment
-              </Link>
+          <div className="mb-6 flex flex-col gap-3 rounded-[8px] border border-[#e4e0de] bg-white p-2 shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-2">
+              <TabButton active={activeTab === "all"} onClick={() => setActiveTab("all")}>
+                All experiments
+              </TabButton>
+              <TabButton active={activeTab === "matches"} onClick={() => setActiveTab("matches")}>
+                Idea Matches
+                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-[6px] bg-[#dff5eb] px-1.5 font-mono text-[10px] text-[#24bf7a]">
+                  1
+                </span>
+              </TabButton>
             </div>
-          </>
-        ) : (
-          <IdeaMatchesTab ideas={ideas} onConnect={showToast} />
-        )}
-      </section>
+            <Link
+              to="/team"
+              className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#24bf7a] px-4 py-2.5 text-[13px] font-semibold text-[#07122f] transition-transform hover:-translate-y-0.5"
+            >
+              <Plus className="h-4 w-4" />
+              Add experiment
+            </Link>
+          </div>
 
-      <div className="h-24" />
+          {activeTab === "all" ? (
+            <>
+              {ideas.length === 0 ? (
+                <div className="rounded-[8px] border border-[#e4e0de] bg-white py-16 text-center text-muted-foreground shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+                  <p>No experiments yet.</p>
+                  <Link
+                    to="/team"
+                    className="mt-4 inline-block text-[13px] text-[#07122f] underline underline-offset-4"
+                  >
+                    Start the first one →
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {ideas.map((idea) => (
+                    <IdeaRow
+                      key={idea.id}
+                      idea={idea}
+                      hasSimilar={SIMILAR_IDS.has(idea.id)}
+                      expanded={expandedId === idea.id}
+                      onToggle={() => setExpandedId(expandedId === idea.id ? null : idea.id)}
+                      onCheckIn={(checkIn, newStatus) => addCheckIn(idea.id, checkIn, newStatus)}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <IdeaMatchesTab ideas={ideas} onConnect={showToast} />
+          )}
+        </div>
+      </section>
 
       {/* Toast */}
       {toastVisible && (
-        <div className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 border border-border bg-card px-6 py-3 text-[13px] text-foreground shadow-lg">
+        <div className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-[8px] border border-[#d8efe4] bg-white px-6 py-3 text-[13px] font-medium text-[#07122f] shadow-[0_18px_48px_rgba(15,23,42,0.14)]">
           Feature coming soon: team introductions
         </div>
       )}
@@ -132,17 +134,138 @@ function IdeaBoardPage() {
   );
 }
 
+function IdeaBoardSidebar({ ideas }: { ideas: IdeaCard[] }) {
+  const total = ideas.length;
+  const pursue = ideas.filter((idea) => idea.mentorEvaluation?.verdict === "pursue").length;
+  const active = ideas.filter((idea) => !idea.status.toLowerCase().startsWith("stop")).length;
+
+  const navItems = [
+    { label: "Dashboard", icon: LayoutDashboard, active: true },
+    { label: "Experiments", icon: PanelsTopLeft },
+    { label: "Manager briefs", icon: FileText },
+    { label: "Team signals", icon: Users },
+    { label: "Check-ins", icon: ClipboardCheck },
+    { label: "Comments", icon: MessageSquare },
+  ];
+
+  return (
+    <aside className="h-fit rounded-[8px] bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.10)] lg:sticky lg:top-8">
+      <div className="mb-5 flex items-center gap-4 lg:mb-8">
+        <div className="flex h-14 w-14 items-center justify-center rounded-[8px] bg-[#24bf7a] text-[24px] font-bold text-[#07122f]">
+          A
+        </div>
+        <div>
+          <div className="text-[20px] font-bold tracking-[-0.01em] text-[#07122f]">Affirm</div>
+          <div className="text-[12px] font-medium text-[#8d93a1]">Anchor Align</div>
+        </div>
+      </div>
+
+      <div className="mb-4 text-[12px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
+        Workspace
+      </div>
+      <nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:block lg:space-y-2">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.label}
+              className={
+                "flex w-full items-center gap-4 rounded-[8px] px-4 py-3 text-left text-[15px] font-semibold transition-colors " +
+                (item.active
+                  ? "bg-[#dff5eb] text-[#07122f]"
+                  : "text-[#697081] hover:bg-[#f4f2f3] hover:text-[#07122f]")
+              }
+            >
+              <Icon className={item.active ? "h-5 w-5 text-[#24bf7a]" : "h-5 w-5"} />
+              {item.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="mt-8 hidden rounded-[8px] bg-[#07122f] p-4 text-white lg:block">
+        <div className="mb-3 flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-[#24bf7a]" />
+          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white/60">
+            Portfolio
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <SidebarMetric label="Active" value={active} />
+          <SidebarMetric label="Pursue" value={pursue} />
+          <SidebarMetric label="Total" value={total} />
+          <SidebarMetric
+            label="Ready"
+            value={total > 0 ? `${Math.round((pursue / total) * 100)}%` : "0%"}
+          />
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function SidebarMetric({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div>
+      <div className="text-[22px] font-bold leading-none text-white">{value}</div>
+      <div className="mt-1 text-[11px] font-medium text-white/55">{label}</div>
+    </div>
+  );
+}
+
+function DashboardHero({ ideas }: { ideas: IdeaCard[] }) {
+  const checkedIn = ideas.reduce((sum, idea) => sum + idea.checkIns.length, 0);
+
+  return (
+    <div className="mb-6 grid grid-cols-1 gap-5 rounded-[8px] bg-[#07122f] p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.12)] xl:grid-cols-[1fr_300px]">
+      <div>
+        <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
+          Team · Step 02 · Idea board
+        </div>
+        <h1 className="max-w-[760px] font-sans text-[52px] font-black leading-[0.98] tracking-normal text-white md:text-[72px]">
+          Active experiment portfolio
+        </h1>
+        <p className="mt-5 max-w-[620px] text-[16px] leading-relaxed text-white/70">
+          Each card is a small bet with a weekly signal, a stop rule, and a manager-ready handoff
+          when the evidence turns green.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 self-end">
+        <HeroStat label="Experiments" value={ideas.length} />
+        <HeroStat label="Check-ins" value={checkedIn} />
+      </div>
+    </div>
+  );
+}
+
+function HeroStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-[8px] bg-white p-4 text-[#07122f]">
+      <div className="text-[34px] font-black leading-none">{value}</div>
+      <div className="mt-2 text-[12px] font-bold uppercase tracking-[0.12em] text-[#8d93a1]">
+        {label}
+      </div>
+    </div>
+  );
+}
+
 function ProjectProgressHeader({ ideas }: { ideas: IdeaCard[] }) {
   const total = ideas.length;
-  const onTrack = ideas.filter((idea) => idea.status.toLowerCase().startsWith("on track")).length;
-  const watch = ideas.filter((idea) => idea.status.toLowerCase().startsWith("watch")).length;
-  const stopped = ideas.filter((idea) => idea.status.toLowerCase().startsWith("stop")).length;
   const pursue = ideas.filter((idea) => idea.mentorEvaluation?.verdict === "pursue").length;
-  const pause = ideas.filter((idea) => idea.mentorEvaluation?.verdict === "pause").length;
-  const drop = ideas.filter((idea) => idea.mentorEvaluation?.verdict === "drop").length;
-  const onCourse = onTrack + pursue;
-  const atRisk = watch + pause;
-  const failed = stopped + drop;
+  const pause = ideas.filter(
+    (idea) =>
+      idea.status.toLowerCase().startsWith("watch") || idea.mentorEvaluation?.verdict === "pause",
+  ).length;
+  const failed = ideas.filter(
+    (idea) =>
+      idea.status.toLowerCase().startsWith("stop") || idea.mentorEvaluation?.verdict === "drop",
+  ).length;
+  const onCourse = ideas.filter(
+    (idea) =>
+      idea.status.toLowerCase().startsWith("on track") ||
+      idea.mentorEvaluation?.verdict === "pursue",
+  ).length;
 
   const stats = [
     {
@@ -154,15 +277,15 @@ function ProjectProgressHeader({ ideas }: { ideas: IdeaCard[] }) {
     },
     {
       label: "Needs attention",
-      value: atRisk,
-      detail: `${watch} watch · ${pause} pause`,
+      value: pause,
+      detail: `${total > 0 ? Math.round((pause / total) * 100) : 0}% of board`,
       tone: "watch" as const,
       trend: [22, 28, 25, 34, 32, 37],
     },
     {
       label: "Failed or stopped",
       value: failed,
-      detail: `${stopped} stopped · ${drop} dropped`,
+      detail: `${total > 0 ? Math.round((failed / total) * 100) : 0}% of board`,
       tone: "danger" as const,
       trend: [18, 16, 21, 19, 24, 22],
     },
@@ -176,7 +299,7 @@ function ProjectProgressHeader({ ideas }: { ideas: IdeaCard[] }) {
   ];
 
   return (
-    <div className="mb-6 grid grid-cols-1 gap-px border border-border bg-border md:grid-cols-4">
+    <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
       {stats.map((stat) => (
         <ProgressStat key={stat.label} {...stat} />
       ))}
@@ -212,17 +335,17 @@ function ProgressStat({
   }[tone];
 
   return (
-    <div className="bg-card p-5">
+    <div className="rounded-[8px] bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
             {label}
           </div>
-          <div className={`mt-3 font-serif text-[38px] leading-none ${toneClass}`}>{value}</div>
+          <div className={`mt-3 text-[40px] font-black leading-none ${toneClass}`}>{value}</div>
         </div>
         <Sparkline values={trend} stroke={stroke} />
       </div>
-      <div className="mt-3 text-[12px] text-muted-foreground">{detail}</div>
+      <div className="mt-3 text-[12px] font-medium text-[#697081]">{detail}</div>
     </div>
   );
 }
@@ -254,7 +377,7 @@ function Sparkline({ values, stroke }: { values: number[]; stroke: string }) {
         strokeLinejoin="round"
         strokeWidth="2"
       />
-      <line x1="4" y1="28" x2="78" y2="28" stroke="#d8d4cc" strokeWidth="1" />
+      <line x1="4" y1="28" x2="78" y2="28" stroke="#ece8e6" strokeWidth="1" />
     </svg>
   );
 }
@@ -286,22 +409,24 @@ function PortfolioSnapshot({ ideas }: { ideas: IdeaCard[] }) {
   ];
 
   return (
-    <div className="mb-8 border border-border bg-card">
-      <div className="grid grid-cols-1 divide-y divide-border lg:grid-cols-[1.35fr_1fr] lg:divide-x lg:divide-y-0">
+    <div className="mb-6 rounded-[8px] bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+      <div className="grid grid-cols-1 divide-y divide-[#ece8e6] lg:grid-cols-[1.35fr_1fr] lg:divide-x lg:divide-y-0">
         <div className="p-6">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
-              <div className="eyebrow mb-1">Portfolio intelligence</div>
-              <p className="text-[12px] text-muted-foreground">
+              <div className="mb-1 text-[12px] font-bold uppercase tracking-[0.16em] text-[#a1a6b3]">
+                Portfolio intelligence
+              </div>
+              <p className="text-[13px] font-medium text-[#697081]">
                 Team experiments moving toward manager-ready commitments.
               </p>
             </div>
-            <span className="border border-primary/30 bg-primary/5 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-primary">
+            <span className="rounded-[8px] bg-[#dff5eb] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-[#08764c]">
               {managerBriefsReady} brief{managerBriefsReady !== 1 ? "s" : ""} ready
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <MetricCell label="Experiments" value={total} />
             <MetricCell label="Pursue" value={pursue} tone="primary" />
             <MetricCell label="Pause" value={pause} tone="watch" />
@@ -309,7 +434,7 @@ function PortfolioSnapshot({ ideas }: { ideas: IdeaCard[] }) {
           </div>
 
           <div className="mt-6">
-            <div className="mb-2 flex items-center justify-between text-[11px] text-muted-foreground">
+            <div className="mb-2 flex items-center justify-between text-[12px] font-medium text-[#697081]">
               <span>Status distribution</span>
               <span>
                 {onTrack} on track · {watch} watch · {stopped} stopped
@@ -319,19 +444,21 @@ function PortfolioSnapshot({ ideas }: { ideas: IdeaCard[] }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 divide-y divide-border p-0 md:grid-cols-[1fr_220px] md:divide-x md:divide-y-0 lg:grid-cols-1 lg:divide-x-0 lg:divide-y">
+        <div className="grid grid-cols-1 divide-y divide-[#ece8e6] p-0 md:grid-cols-[1fr_220px] md:divide-x md:divide-y-0 lg:grid-cols-1 lg:divide-x-0 lg:divide-y">
           <div className="p-6">
-            <div className="eyebrow mb-5">Pipeline</div>
+            <div className="mb-5 text-[12px] font-bold uppercase tracking-[0.16em] text-[#a1a6b3]">
+              Pipeline
+            </div>
             <div className="space-y-4">
               {pipeline.map((item) => (
                 <div key={item.label}>
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="text-[12px] text-muted-foreground">{item.label}</span>
-                    <span className="font-mono text-[12px] text-foreground">{item.value}</span>
+                    <span className="text-[12px] font-medium text-[#697081]">{item.label}</span>
+                    <span className="text-[12px] font-bold text-[#07122f]">{item.value}</span>
                   </div>
-                  <div className="h-1.5 bg-muted">
+                  <div className="h-2 rounded-full bg-[#f0eeee]">
                     <div
-                      className="h-full bg-primary"
+                      className="h-full rounded-full bg-[#24bf7a]"
                       style={{
                         width: `${total > 0 ? Math.max(6, (item.value / total) * 100) : 0}%`,
                       }}
@@ -341,7 +468,7 @@ function PortfolioSnapshot({ ideas }: { ideas: IdeaCard[] }) {
               ))}
             </div>
 
-            <div className="mt-6 grid grid-cols-3 gap-px border border-border bg-border">
+            <div className="mt-6 grid grid-cols-3 gap-3">
               <MiniVerdict label="Pursue" value={pursue} className="text-primary" />
               <MiniVerdict label="Pause" value={pause} className="text-amber-600" />
               <MiniVerdict label="Drop" value={drop} className="text-destructive" />
@@ -349,7 +476,9 @@ function PortfolioSnapshot({ ideas }: { ideas: IdeaCard[] }) {
           </div>
 
           <div className="p-6">
-            <div className="eyebrow mb-3">Readiness radar</div>
+            <div className="mb-3 text-[12px] font-bold uppercase tracking-[0.16em] text-[#a1a6b3]">
+              Readiness radar
+            </div>
             <ReadinessRadar dimensions={portfolioReadiness} compact />
           </div>
         </div>
@@ -371,11 +500,11 @@ function MetricCell({
     tone === "primary" ? "text-primary" : tone === "watch" ? "text-amber-600" : "text-foreground";
 
   return (
-    <div className="bg-card p-4">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+    <div className="rounded-[8px] bg-[#f7f5f4] p-4">
+      <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
         {label}
       </div>
-      <div className={`mt-2 font-serif text-[32px] leading-none ${toneClass}`}>{value}</div>
+      <div className={`mt-2 text-[34px] font-black leading-none ${toneClass}`}>{value}</div>
     </div>
   );
 }
@@ -388,7 +517,10 @@ function StackedBar({
   total: number;
 }) {
   return (
-    <div className="flex h-2 overflow-hidden bg-muted" aria-label="Status distribution">
+    <div
+      className="flex h-3 overflow-hidden rounded-full bg-[#f0eeee]"
+      aria-label="Status distribution"
+    >
       {segments.map((segment) => {
         if (segment.value === 0) return null;
         return (
@@ -414,9 +546,9 @@ function MiniVerdict({
   className: string;
 }) {
   return (
-    <div className="bg-card p-3 text-center">
-      <div className={`font-mono text-[16px] leading-none ${className}`}>{value}</div>
-      <div className="mt-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+    <div className="rounded-[8px] bg-[#f7f5f4] p-3 text-center">
+      <div className={`text-[18px] font-black leading-none ${className}`}>{value}</div>
+      <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
         {label}
       </div>
     </div>
@@ -436,10 +568,10 @@ function TabButton({
     <button
       onClick={onClick}
       className={
-        "flex items-center gap-1 px-5 py-3 font-mono text-[11px] uppercase tracking-wider transition-colors " +
+        "flex items-center gap-1 rounded-[8px] px-4 py-2.5 text-[13px] font-bold transition-colors " +
         (active
-          ? "border-b-2 border-foreground text-foreground"
-          : "border-b-2 border-transparent text-muted-foreground hover:text-foreground")
+          ? "bg-[#07122f] text-white"
+          : "text-[#697081] hover:bg-[#f4f2f3] hover:text-[#07122f]")
       }
     >
       {children}
@@ -461,16 +593,16 @@ function IdeaMatchesTab({ ideas, onConnect }: { ideas: IdeaCard[]; onConnect: ()
 
   return (
     <div className="space-y-6">
-      <p className="text-[12px] text-muted-foreground">
+      <p className="text-[13px] font-medium text-[#697081]">
         1 potential collaboration detected across active experiments.
       </p>
 
       {/* Match card */}
-      <div className="border border-dashed border-amber-400/60 bg-amber-50/30">
+      <div className="overflow-hidden rounded-[8px] bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-amber-400/30 px-8 py-4">
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden />
-          <span className="font-mono text-[11px] uppercase tracking-wider text-amber-700">
+        <div className="flex items-center gap-3 border-b border-[#f0eeee] px-8 py-4">
+          <span className="h-2 w-2 rounded-full bg-[#d79000]" aria-hidden />
+          <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-[#b57400]">
             Potential collaboration found
           </span>
         </div>
@@ -480,23 +612,23 @@ function IdeaMatchesTab({ ideas, onConnect }: { ideas: IdeaCard[]; onConnect: ()
           <MatchIdeaSummary idea={lena} />
 
           {/* Center connector */}
-          <div className="flex flex-col items-center justify-center gap-2 px-6 py-8 md:border-x md:border-amber-400/20">
-            <div className="hidden h-px w-8 bg-amber-400/40 md:block" />
-            <span className="max-w-[120px] text-center font-mono text-[10px] uppercase tracking-wider text-amber-600">
+          <div className="flex flex-col items-center justify-center gap-2 px-6 py-8 md:border-x md:border-[#f0eeee]">
+            <div className="hidden h-px w-8 bg-[#d79000]/40 md:block" />
+            <span className="max-w-[120px] text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[#b57400]">
               Both tackling signal-to-noise in engineering ops
             </span>
-            <div className="hidden h-px w-8 bg-amber-400/40 md:block" />
+            <div className="hidden h-px w-8 bg-[#d79000]/40 md:block" />
           </div>
 
           <MatchIdeaSummary idea={jonas} />
         </div>
 
         {/* AI insight block */}
-        <div className="border-t border-amber-400/30 bg-amber-50/40 px-8 py-5">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-amber-700">
+        <div className="border-t border-[#f0eeee] bg-[#fff8e8] px-8 py-5">
+          <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#b57400]">
             AI insight
           </div>
-          <p className="text-[13px] leading-relaxed text-foreground">
+          <p className="text-[13px] font-medium leading-relaxed text-[#07122f]">
             These experiments are testing the same hypothesis from different angles — alert noise
             vs. metric noise. Running them in parallel risks duplication. Consider: one team owns
             the problem, the other contributes findings. Suggested owner: whoever has more on-call
@@ -505,10 +637,10 @@ function IdeaMatchesTab({ ideas, onConnect }: { ideas: IdeaCard[]; onConnect: ()
         </div>
 
         {/* Action row */}
-        <div className="border-t border-amber-400/30 px-8 py-5">
+        <div className="border-t border-[#f0eeee] px-8 py-5">
           <button
             onClick={onConnect}
-            className="border border-amber-500/60 bg-amber-400/10 px-5 py-2.5 font-mono text-[11px] uppercase tracking-wider text-amber-700 transition-colors hover:bg-amber-400/20"
+            className="rounded-[8px] bg-[#fff0c7] px-5 py-2.5 text-[13px] font-bold text-[#8b5b00] transition-colors hover:bg-[#ffe39a]"
           >
             Connect these teams →
           </button>
@@ -521,10 +653,10 @@ function IdeaMatchesTab({ ideas, onConnect }: { ideas: IdeaCard[]; onConnect: ()
 function MatchIdeaSummary({ idea }: { idea: IdeaCard }) {
   return (
     <div className="px-8 py-6">
-      <p className="mb-1 text-[11px] text-muted-foreground">{idea.author}</p>
-      <p className="mb-3 text-[14px] font-medium leading-snug text-foreground">{idea.problem}</p>
-      <p className="text-[12px] leading-relaxed text-muted-foreground">
-        <span className="font-mono text-[10px] uppercase tracking-wider text-foreground/60">
+      <p className="mb-1 text-[12px] font-medium text-[#697081]">{idea.author}</p>
+      <p className="mb-3 text-[15px] font-bold leading-snug text-[#07122f]">{idea.problem}</p>
+      <p className="text-[12px] font-medium leading-relaxed text-[#697081]">
+        <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#07122f]/60">
           Experiment:{" "}
         </span>
         {idea.experiment}
@@ -549,7 +681,7 @@ function IdeaRow({
   const canCreateManagerBrief = idea.mentorEvaluation?.verdict === "pursue";
 
   return (
-    <div className="border border-dashed border-border bg-card">
+    <div className="overflow-hidden rounded-[8px] bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
       {/* Summary row */}
       <div className="flex items-start gap-6 px-8 py-6">
         <div className="flex-1 min-w-0">
@@ -560,25 +692,25 @@ function IdeaRow({
             />
             <span
               className={
-                "font-mono text-[11px] uppercase tracking-wider " + getStatusColor(idea.status)
+                "text-[11px] font-bold uppercase tracking-[0.12em] " + getStatusColor(idea.status)
               }
             >
               {idea.status}
             </span>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[12px] font-medium text-[#697081]">
               · {idea.checkIns.length} check-in{idea.checkIns.length !== 1 ? "s" : ""}
             </span>
             {hasSimilar && (
-              <span className="font-mono text-[10px] text-amber-600">· Similar idea on board</span>
+              <span className="text-[11px] font-bold text-[#b57400]">· Similar idea on board</span>
             )}
             {idea.mentorEvaluation && <VerdictBadge verdict={idea.mentorEvaluation.verdict} />}
           </div>
-          <p className="text-[15px] font-medium leading-snug text-foreground">{idea.problem}</p>
-          <p className="mt-1 text-[12px] text-muted-foreground">{idea.author}</p>
+          <p className="text-[17px] font-bold leading-snug text-[#07122f]">{idea.problem}</p>
+          <p className="mt-1 text-[13px] font-medium text-[#697081]">{idea.author}</p>
         </div>
         <button
           onClick={onToggle}
-          className="shrink-0 border border-border px-4 py-2 text-[12px] font-mono uppercase tracking-wider text-foreground transition-colors hover:border-foreground/60"
+          className="shrink-0 rounded-[8px] bg-[#f4f2f3] px-4 py-2 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#dff5eb]"
         >
           {expanded ? "Collapse" : "View + Check in"}
         </button>
@@ -586,37 +718,47 @@ function IdeaRow({
 
       {/* Expanded detail + check-in */}
       {expanded && (
-        <div className="border-t border-border">
+        <div className="border-t border-[#f0eeee]">
           {/* Full card details */}
-          <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0">
+          <div className="grid grid-cols-1 divide-y divide-[#f0eeee] md:grid-cols-2 md:divide-x md:divide-y-0">
             <DetailBlock label="The one-week experiment" value={idea.experiment} />
             <DetailBlock label="Willing to risk" value={idea.willingToRisk} />
           </div>
-          <div className="grid grid-cols-2 divide-x divide-border border-t border-border">
+          <div className="grid grid-cols-1 divide-y divide-[#f0eeee] border-t border-[#f0eeee] md:grid-cols-2 md:divide-x md:divide-y-0">
             <div className="px-8 py-5">
-              <div className="eyebrow mb-1 text-primary">Go signal</div>
-              <p className="text-[13px] leading-relaxed text-foreground">{idea.goSignal}</p>
+              <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#08764c]">
+                Go signal
+              </div>
+              <p className="text-[13px] font-medium leading-relaxed text-[#07122f]">
+                {idea.goSignal}
+              </p>
             </div>
             <div className="px-8 py-5">
-              <div className="eyebrow mb-1 text-destructive">Stop signal</div>
-              <p className="text-[13px] leading-relaxed text-foreground">{idea.stopSignal}</p>
+              <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-red-600">
+                Stop signal
+              </div>
+              <p className="text-[13px] font-medium leading-relaxed text-[#07122f]">
+                {idea.stopSignal}
+              </p>
             </div>
           </div>
 
           {canCreateManagerBrief && <ReadinessProfile idea={idea} />}
 
           {canCreateManagerBrief && (
-            <div className="border-t border-border bg-primary/5 px-8 py-5">
+            <div className="border-t border-[#f0eeee] bg-[#dff5eb] px-8 py-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <div className="eyebrow mb-1 text-primary">Manager handoff</div>
-                  <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#08764c]">
+                    Manager handoff
+                  </div>
+                  <p className="text-[13px] font-medium leading-relaxed text-[#406151]">
                     Create a pilot brief that answers the nine manager intake questions.
                   </p>
                 </div>
                 <button
                   onClick={() => downloadManagerBriefPdf(idea)}
-                  className="shrink-0 border border-primary/40 bg-card px-5 py-2.5 font-mono text-[11px] uppercase tracking-wider text-primary transition-colors hover:bg-accent"
+                  className="shrink-0 rounded-[8px] bg-[#07122f] px-5 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] text-white transition-transform hover:-translate-y-0.5"
                 >
                   Download manager brief PDF
                 </button>
@@ -626,8 +768,10 @@ function IdeaRow({
 
           {/* Check-in history */}
           {idea.checkIns.length > 0 && (
-            <div className="border-t border-border px-8 py-6">
-              <div className="eyebrow mb-4">Check-in history</div>
+            <div className="border-t border-[#f0eeee] px-8 py-6">
+              <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
+                Check-in history
+              </div>
               <ol className="space-y-4">
                 {idea.checkIns.map((ci) => (
                   <CheckInHistoryItem key={ci.id} checkIn={ci} />
@@ -786,18 +930,20 @@ function ReadinessProfile({ idea }: { idea: IdeaCard }) {
   );
 
   return (
-    <div className="border-t border-border px-8 py-6">
+    <div className="border-t border-[#f0eeee] px-8 py-6">
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
-          <div className="eyebrow mb-1">Innovation readiness profile</div>
-          <p className="max-w-[640px] text-[13px] leading-relaxed text-muted-foreground">
+          <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
+            Innovation readiness profile
+          </div>
+          <p className="max-w-[640px] text-[13px] font-medium leading-relaxed text-[#697081]">
             Assessment derived from mentor evaluation, experiment shape, risk guardrails, and
             check-in evidence.
           </p>
         </div>
-        <div className="border border-border bg-background px-4 py-3 text-right">
-          <div className="font-serif text-[30px] leading-none text-primary">{average}</div>
-          <div className="mt-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+        <div className="rounded-[8px] bg-[#dff5eb] px-4 py-3 text-right">
+          <div className="text-[32px] font-black leading-none text-[#08764c]">{average}</div>
+          <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#08764c]/70">
             Readiness
           </div>
         </div>
@@ -810,32 +956,38 @@ function ReadinessProfile({ idea }: { idea: IdeaCard }) {
           ))}
         </div>
 
-        <div className="border border-border bg-muted/20 p-5">
+        <div className="rounded-[8px] bg-[#f7f5f4] p-5">
           <div className="mb-5">
-            <div className="eyebrow mb-3">Readiness radar</div>
+            <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
+              Readiness radar
+            </div>
             <ReadinessRadar dimensions={dimensions} />
           </div>
 
-          <div className="eyebrow mb-3">Innovation focus</div>
+          <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
+            Innovation focus
+          </div>
           <div className="flex flex-wrap gap-2">
             {focus.length > 0 ? (
               focus.map((item) => (
                 <span
                   key={item}
-                  className="border border-primary/30 bg-primary/5 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-primary"
+                  className="rounded-[8px] bg-[#dff5eb] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#08764c]"
                 >
                   {item}
                 </span>
               ))
             ) : (
-              <span className="text-[12px] text-muted-foreground">Focus still emerging</span>
+              <span className="text-[12px] font-medium text-[#697081]">Focus still emerging</span>
             )}
           </div>
 
           {idea.mentorEvaluation?.biggestBlindspot && (
-            <div className="mt-5 border-t border-border pt-4">
-              <div className="eyebrow mb-2 text-amber-600">Watch item</div>
-              <p className="text-[12px] leading-relaxed text-muted-foreground">
+            <div className="mt-5 border-t border-[#e4e0de] pt-4">
+              <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#b57400]">
+                Watch item
+              </div>
+              <p className="text-[12px] font-medium leading-relaxed text-[#697081]">
                 {idea.mentorEvaluation.biggestBlindspot}
               </p>
             </div>
@@ -901,7 +1053,7 @@ function ReadinessRadar({
               })
               .join(" ")}
             fill="none"
-            stroke="#d8d4cc"
+            stroke="#d9d5d2"
             strokeDasharray={level === 100 ? "0" : "2 3"}
             strokeWidth="1"
           />
@@ -912,7 +1064,7 @@ function ReadinessRadar({
           const labelPoint = getPoint(index, 100, labelRadius);
           return (
             <g key={shortLabels[index]}>
-              <line x1={center} y1={center} x2={edge.x} y2={edge.y} stroke="#d8d4cc" />
+              <line x1={center} y1={center} x2={edge.x} y2={edge.y} stroke="#d9d5d2" />
               <text
                 x={labelPoint.x}
                 y={labelPoint.y}
@@ -928,22 +1080,22 @@ function ReadinessRadar({
 
         <polygon
           points={polygon}
-          fill="#005c3b"
-          fillOpacity="0.18"
-          stroke="#005c3b"
+          fill="#24bf7a"
+          fillOpacity="0.2"
+          stroke="#24bf7a"
           strokeWidth="2"
         />
         {dimensions.map((dimension, index) => {
           const point = getPoint(index, dimension.value);
           return (
             <g key={dimension.label}>
-              <circle cx={point.x} cy={point.y} r="3" fill="#005c3b" />
+              <circle cx={point.x} cy={point.y} r="3" fill="#24bf7a" />
               {!compact && (
                 <text
                   x={point.x}
                   y={point.y - 8}
                   textAnchor="middle"
-                  className="fill-primary font-mono text-[9px]"
+                  className="fill-[#08764c] text-[9px] font-bold"
                 >
                   {dimension.value}
                 </text>
@@ -958,25 +1110,26 @@ function ReadinessRadar({
 
 function ReadinessRow({ dimension }: { dimension: ReadinessDimension }) {
   const barClass =
-    dimension.value >= 80
-      ? "bg-primary"
-      : dimension.value >= 65
-        ? "bg-amber-500"
-        : "bg-destructive";
+    dimension.value >= 80 ? "bg-[#24bf7a]" : dimension.value >= 65 ? "bg-[#d79000]" : "bg-red-600";
 
   return (
     <div className="grid gap-2 md:grid-cols-[170px_1fr_92px] md:items-center">
       <div>
-        <div className="text-[13px] text-foreground">{dimension.label}</div>
-        <div className="text-[11px] text-muted-foreground">{dimension.status}</div>
+        <div className="text-[13px] font-bold text-[#07122f]">{dimension.label}</div>
+        <div className="text-[11px] font-medium text-[#697081]">{dimension.status}</div>
       </div>
       <div>
-        <div className="h-1.5 bg-muted">
-          <div className={`h-full ${barClass}`} style={{ width: `${dimension.value}%` }} />
+        <div className="h-2 rounded-full bg-[#f0eeee]">
+          <div
+            className={`h-full rounded-full ${barClass}`}
+            style={{ width: `${dimension.value}%` }}
+          />
         </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{dimension.note}</p>
+        <p className="mt-1 text-[11px] font-medium leading-relaxed text-[#697081]">
+          {dimension.note}
+        </p>
       </div>
-      <div className="font-mono text-[12px] text-muted-foreground md:text-right">
+      <div className="text-[12px] font-bold text-[#697081] md:text-right">
         {dimension.value}/100
       </div>
     </div>
@@ -985,14 +1138,14 @@ function ReadinessRow({ dimension }: { dimension: ReadinessDimension }) {
 
 function VerdictBadge({ verdict }: { verdict: MentorEvaluation["verdict"] }) {
   const config = {
-    pursue: { label: "Pursue", className: "text-primary border-primary/40 bg-accent" },
-    pause: { label: "Pause", className: "text-amber-600 border-amber-400/40 bg-amber-50/60" },
-    drop: { label: "Drop", className: "text-destructive border-destructive/30 bg-destructive/5" },
+    pursue: { label: "Pursue", className: "bg-[#dff5eb] text-[#08764c]" },
+    pause: { label: "Pause", className: "bg-[#fff0c7] text-[#8b5b00]" },
+    drop: { label: "Drop", className: "bg-red-50 text-red-600" },
   }[verdict];
 
   return (
     <span
-      className={`border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${config.className}`}
+      className={`rounded-[6px] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${config.className}`}
     >
       {config.label}
     </span>
@@ -1002,8 +1155,10 @@ function VerdictBadge({ verdict }: { verdict: MentorEvaluation["verdict"] }) {
 function DetailBlock({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-8 py-5">
-      <div className="eyebrow mb-1">{label}</div>
-      <p className="text-[13px] leading-relaxed text-foreground">{value}</p>
+      <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
+        {label}
+      </div>
+      <p className="text-[13px] font-medium leading-relaxed text-[#07122f]">{value}</p>
     </div>
   );
 }
@@ -1024,19 +1179,19 @@ function CheckInHistoryItem({ checkIn }: { checkIn: TeamCheckIn }) {
   return (
     <li className="flex gap-4">
       <div className="flex flex-col items-center gap-1">
-        <span className="h-1.5 w-1.5 rounded-full bg-border mt-1.5" aria-hidden />
-        <span className="w-px flex-1 bg-border" aria-hidden />
+        <span className="mt-1.5 h-2 w-2 rounded-full bg-[#d9d5d2]" aria-hidden />
+        <span className="w-px flex-1 bg-[#ece8e6]" aria-hidden />
       </div>
       <div className="flex-1 pb-2">
-        <div className="flex items-center gap-3 mb-1">
-          <span className="font-mono text-[11px] text-muted-foreground">
+        <div className="mb-1 flex items-center gap-3">
+          <span className="text-[11px] font-bold text-[#697081]">
             {format(new Date(checkIn.createdAt), "d MMM yyyy")}
           </span>
-          <span className={`font-mono text-[11px] uppercase tracking-wider ${decisionColor}`}>
+          <span className={`text-[11px] font-bold uppercase tracking-[0.1em] ${decisionColor}`}>
             {decisionLabel}
           </span>
         </div>
-        <p className="text-[13px] leading-relaxed text-foreground">{checkIn.learning}</p>
+        <p className="text-[13px] font-medium leading-relaxed text-[#07122f]">{checkIn.learning}</p>
       </div>
     </li>
   );
@@ -1070,12 +1225,12 @@ function CheckInForm({
 
   if (saved) {
     return (
-      <div className="border-t border-border bg-background px-8 py-6">
-        <p className="text-[13px] text-muted-foreground">
+      <div className="border-t border-[#f0eeee] bg-[#f7f5f4] px-8 py-6">
+        <p className="text-[13px] font-medium text-[#697081]">
           Check-in saved.{" "}
           <button
             onClick={() => setSaved(false)}
-            className="text-foreground underline underline-offset-4"
+            className="font-bold text-[#07122f] underline underline-offset-4"
           >
             Add another
           </button>
@@ -1085,11 +1240,13 @@ function CheckInForm({
   }
 
   return (
-    <div className="border-t border-border bg-background px-8 py-6">
-      <div className="eyebrow mb-4">This week's check-in</div>
+    <div className="border-t border-[#f0eeee] bg-[#f7f5f4] px-8 py-6">
+      <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
+        This week's check-in
+      </div>
 
       <label className="block">
-        <span className="mb-2 block text-[13px] text-muted-foreground">
+        <span className="mb-2 block text-[13px] font-medium text-[#697081]">
           What did you learn this week?
         </span>
         <textarea
@@ -1097,32 +1254,32 @@ function CheckInForm({
           onChange={(e) => setLearning(e.target.value)}
           placeholder="One honest observation about what the experiment revealed."
           rows={3}
-          className="w-full resize-none border border-border bg-card px-4 py-3 text-[14px] leading-relaxed text-foreground outline-none transition-colors focus:border-primary"
+          className="w-full resize-none rounded-[8px] border border-[#e4e0de] bg-white px-4 py-3 text-[14px] font-medium leading-relaxed text-[#07122f] outline-none transition-colors focus:border-[#24bf7a]"
         />
       </label>
 
       <div className="mt-4">
-        <span className="mb-3 block text-[13px] text-muted-foreground">Decision</span>
+        <span className="mb-3 block text-[13px] font-medium text-[#697081]">Decision</span>
         <div className="flex gap-2">
           {(
             [
               {
                 value: "continue" as const,
                 label: "Continue →",
-                active: "bg-primary text-primary-foreground",
-                inactive: "border-border text-foreground hover:border-foreground/60",
+                active: "bg-[#24bf7a] text-[#07122f]",
+                inactive: "bg-white text-[#07122f] hover:bg-[#dff5eb]",
               },
               {
                 value: "pause" as const,
                 label: "Pause ⏸",
-                active: "bg-amber-500 text-white",
-                inactive: "border-border text-foreground hover:border-foreground/60",
+                active: "bg-[#d79000] text-white",
+                inactive: "bg-white text-[#07122f] hover:bg-[#fff0c7]",
               },
               {
                 value: "stop" as const,
                 label: "Stop ✕",
-                active: "bg-destructive text-destructive-foreground",
-                inactive: "border-border text-foreground hover:border-foreground/60",
+                active: "bg-red-600 text-white",
+                inactive: "bg-white text-[#07122f] hover:bg-red-50",
               },
             ] satisfies {
               value: TeamCheckIn["decision"];
@@ -1135,10 +1292,8 @@ function CheckInForm({
               key={opt.value}
               onClick={() => setDecision(opt.value)}
               className={
-                "border px-4 py-2 text-[13px] font-medium transition-colors " +
-                (decision === opt.value
-                  ? opt.active + " border-transparent"
-                  : "border " + opt.inactive)
+                "rounded-[8px] px-4 py-2 text-[13px] font-bold transition-colors " +
+                (decision === opt.value ? opt.active : opt.inactive)
               }
             >
               {opt.label}
@@ -1151,7 +1306,7 @@ function CheckInForm({
         <button
           onClick={handleSubmit}
           disabled={!learning.trim() || !decision}
-          className="bg-primary px-6 py-2.5 text-[13px] font-medium tracking-wide text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+          className="rounded-[8px] bg-[#07122f] px-6 py-2.5 text-[13px] font-bold tracking-wide text-white transition-opacity hover:opacity-90 disabled:opacity-40"
         >
           Save check-in
         </button>

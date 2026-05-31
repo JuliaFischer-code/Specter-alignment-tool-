@@ -13,29 +13,71 @@ const teamNav = [
   { to: "/idea-board", label: "Idea Board", n: "02" },
 ] as const;
 
-export function AppShell({
-  children,
-  teamMode,
-}: {
-  children: ReactNode;
-  teamMode?: boolean;
-}) {
+export function AppShell({ children, teamMode }: { children: ReactNode; teamMode?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { mode, setMode } = useMode();
   const navigate = useNavigate();
 
-  const nav = mode === "manager" ? managerNav : teamNav;
+  const managerRoutes = new Set(["/", "/commitment", "/check-in"]);
+  const currentMode = teamMode ? "team" : managerRoutes.has(pathname) ? "manager" : mode;
+  const nav = currentMode === "manager" ? managerNav : teamNav;
+  const dashboardSkin =
+    teamMode ||
+    pathname === "/" ||
+    pathname === "/team" ||
+    pathname === "/commitment" ||
+    pathname === "/check-in";
+  const managerModeClass = dashboardSkin
+    ? currentMode === "manager"
+      ? "bg-[#07122f] text-white"
+      : "text-[#697081] hover:text-[#07122f]"
+    : currentMode === "manager"
+      ? "bg-foreground text-background"
+      : "text-muted-foreground hover:text-foreground";
+  const teamModeClass = dashboardSkin
+    ? currentMode === "team"
+      ? "bg-[#07122f] text-white"
+      : "text-[#697081] hover:text-[#07122f]"
+    : currentMode === "team"
+      ? "bg-foreground text-background"
+      : "text-muted-foreground hover:text-foreground";
 
   return (
-    <div className={`min-h-screen text-foreground ${teamMode ? "bg-[#FAFAF7]" : "bg-background"}`}>
-      <header className="border-b border-border bg-background">
+    <div
+      className={`min-h-screen text-foreground ${dashboardSkin ? "bg-[#f4f2f3]" : "bg-background"}`}
+    >
+      <header
+        className={
+          dashboardSkin
+            ? "border-b border-[#e4e0de] bg-[#f4f2f3]"
+            : "border-b border-border bg-background"
+        }
+      >
         <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between px-8">
           <Link to="/" className="flex items-baseline gap-3">
-            <span className="h-2 w-2 translate-y-[-2px] bg-primary" aria-hidden />
-            <span className="font-serif text-[22px] leading-none">
+            <span
+              className={
+                "h-2 w-2 translate-y-[-2px] " +
+                (dashboardSkin ? "rounded-full bg-[#24bf7a]" : "bg-primary")
+              }
+              aria-hidden
+            />
+            <span
+              className={
+                dashboardSkin
+                  ? "text-[22px] font-black leading-none tracking-normal text-[#07122f]"
+                  : "font-serif text-[22px] leading-none"
+              }
+            >
               Uncertainty Navigator
             </span>
-            <span className="eyebrow ml-2 hidden md:inline">
+            <span
+              className={
+                dashboardSkin
+                  ? "ml-2 hidden text-[11px] font-bold uppercase tracking-[0.16em] text-[#8d93a1] md:inline"
+                  : "eyebrow ml-2 hidden md:inline"
+              }
+            >
               Affordable Loss · AI Pilots
             </span>
           </Link>
@@ -48,25 +90,26 @@ export function AppShell({
                   key={item.to}
                   to={item.to}
                   className={
-                    "group relative px-4 py-2 text-[13px] transition-colors " +
-                    (active
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground")
+                    "group relative rounded-[8px] px-4 py-2 text-[13px] font-semibold transition-colors " +
+                    (dashboardSkin
+                      ? active
+                        ? "bg-white text-[#07122f] shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
+                        : "text-[#697081] hover:bg-white/60 hover:text-[#07122f]"
+                      : active
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground")
                   }
                 >
                   <span className="number-tag mr-2">{item.n}</span>
                   {item.label}
-                  {active && (
+                  {active && !dashboardSkin && (
                     <span className="absolute inset-x-3 -bottom-px h-px bg-primary" />
                   )}
                 </Link>
               );
             })}
-            {mode === "team" && (
-              <span
-                aria-hidden
-                className="invisible pointer-events-none px-4 py-2 text-[13px]"
-              >
+            {currentMode === "team" && (
+              <span aria-hidden className="invisible pointer-events-none px-4 py-2 text-[13px]">
                 <span className="number-tag mr-2">03</span>
                 Check-in
               </span>
@@ -74,36 +117,49 @@ export function AppShell({
           </nav>
         </div>
       </header>
-      <div className="pt-16 pb-0">
+      <div className={dashboardSkin ? "pt-6 pb-0" : "pt-16 pb-0"}>
         <div className="mx-auto max-w-[1240px] px-8">
-        <div className="flex items-center rounded-sm border border-border p-0.5 w-fit">
-          <button
-            onClick={() => { setMode("manager"); navigate({ to: "/" }); }}
+          <div
             className={
-              "w-24 py-1 text-center font-mono text-[11px] uppercase tracking-wider transition-colors " +
-              (mode === "manager"
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground")
+              "flex w-fit items-center p-0.5 " +
+              (dashboardSkin
+                ? "rounded-[8px] bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)]"
+                : "rounded-sm border border-border")
             }
           >
-            Manager
-          </button>
-          <button
-            onClick={() => { setMode("team"); navigate({ to: "/team" }); }}
-            className={
-              "w-24 py-1 text-center font-mono text-[11px] uppercase tracking-wider transition-colors " +
-              (mode === "team"
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground")
-            }
-          >
-            Team
-          </button>
-        </div>
+            <button
+              onClick={() => {
+                setMode("manager");
+                navigate({ to: "/" });
+              }}
+              className={
+                "w-24 rounded-[7px] py-1.5 text-center text-[11px] font-bold uppercase tracking-[0.1em] transition-colors " +
+                managerModeClass
+              }
+            >
+              Manager
+            </button>
+            <button
+              onClick={() => {
+                setMode("team");
+                navigate({ to: "/team" });
+              }}
+              className={
+                "w-24 rounded-[7px] py-1.5 text-center text-[11px] font-bold uppercase tracking-[0.1em] transition-colors " +
+                teamModeClass
+              }
+            >
+              Team
+            </button>
+          </div>
         </div>
       </div>
       <main>{children}</main>
-      <footer className="mt-24 border-t border-border">
+      <footer
+        className={
+          dashboardSkin ? "mt-16 border-t border-[#e4e0de]" : "mt-24 border-t border-border"
+        }
+      >
         <div className="mx-auto flex max-w-[1240px] items-center justify-between px-8 py-6 text-[12px] text-muted-foreground">
           <span>Uncertainty Navigator — Internal Methodology Tool</span>
           <span className="font-mono">v0.4 · Effectuation Practice</span>
@@ -127,13 +183,13 @@ export function PageHeader({
   return (
     <div className="mx-auto max-w-[1240px] px-8 pt-6 pb-10">
       <div className="eyebrow">{eyebrow}</div>
-      <h1 className={`mt-4 max-w-3xl font-serif text-[56px] leading-[1.02] ${teamStyle ? "tracking-wide" : ""}`}>
+      <h1
+        className={`mt-4 max-w-3xl font-serif text-[56px] leading-[1.02] ${teamStyle ? "tracking-wide" : ""}`}
+      >
         {title}
       </h1>
       {lede && (
-        <p className="mt-6 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
-          {lede}
-        </p>
+        <p className="mt-6 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">{lede}</p>
       )}
     </div>
   );
