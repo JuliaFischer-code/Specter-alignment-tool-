@@ -60,6 +60,9 @@ function IdeaBoardPage() {
       />
 
       <section className="mx-auto max-w-[1240px] px-8">
+        <ProjectProgressHeader ideas={ideas} />
+        <PortfolioSnapshot ideas={ideas} />
+
         {/* Tabs */}
         <div className="mb-8 flex gap-0 border-b border-border">
           <TabButton active={activeTab === "all"} onClick={() => setActiveTab("all")}>
@@ -126,6 +129,297 @@ function IdeaBoardPage() {
         </div>
       )}
     </AppShell>
+  );
+}
+
+function ProjectProgressHeader({ ideas }: { ideas: IdeaCard[] }) {
+  const total = ideas.length;
+  const onTrack = ideas.filter((idea) => idea.status.toLowerCase().startsWith("on track")).length;
+  const watch = ideas.filter((idea) => idea.status.toLowerCase().startsWith("watch")).length;
+  const stopped = ideas.filter((idea) => idea.status.toLowerCase().startsWith("stop")).length;
+  const pursue = ideas.filter((idea) => idea.mentorEvaluation?.verdict === "pursue").length;
+  const pause = ideas.filter((idea) => idea.mentorEvaluation?.verdict === "pause").length;
+  const drop = ideas.filter((idea) => idea.mentorEvaluation?.verdict === "drop").length;
+  const onCourse = onTrack + pursue;
+  const atRisk = watch + pause;
+  const failed = stopped + drop;
+
+  const stats = [
+    {
+      label: "On expected course",
+      value: onCourse,
+      detail: `${total > 0 ? Math.round((onCourse / total) * 100) : 0}% of board`,
+      tone: "primary" as const,
+      trend: [34, 38, 44, 48, 57, 63],
+    },
+    {
+      label: "Needs attention",
+      value: atRisk,
+      detail: `${watch} watch · ${pause} pause`,
+      tone: "watch" as const,
+      trend: [22, 28, 25, 34, 32, 37],
+    },
+    {
+      label: "Failed or stopped",
+      value: failed,
+      detail: `${stopped} stopped · ${drop} dropped`,
+      tone: "danger" as const,
+      trend: [18, 16, 21, 19, 24, 22],
+    },
+    {
+      label: "Manager briefs",
+      value: pursue,
+      detail: "Pursue-ready handoffs",
+      tone: "neutral" as const,
+      trend: [10, 18, 24, 31, 38, 45],
+    },
+  ];
+
+  return (
+    <div className="mb-6 grid grid-cols-1 gap-px border border-border bg-border md:grid-cols-4">
+      {stats.map((stat) => (
+        <ProgressStat key={stat.label} {...stat} />
+      ))}
+    </div>
+  );
+}
+
+function ProgressStat({
+  label,
+  value,
+  detail,
+  tone,
+  trend,
+}: {
+  label: string;
+  value: number;
+  detail: string;
+  tone: "primary" | "watch" | "danger" | "neutral";
+  trend: number[];
+}) {
+  const toneClass = {
+    primary: "text-primary",
+    watch: "text-amber-600",
+    danger: "text-destructive",
+    neutral: "text-foreground",
+  }[tone];
+
+  const stroke = {
+    primary: "#005c3b",
+    watch: "#d79000",
+    danger: "#dc2626",
+    neutral: "#111827",
+  }[tone];
+
+  return (
+    <div className="bg-card p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            {label}
+          </div>
+          <div className={`mt-3 font-serif text-[38px] leading-none ${toneClass}`}>{value}</div>
+        </div>
+        <Sparkline values={trend} stroke={stroke} />
+      </div>
+      <div className="mt-3 text-[12px] text-muted-foreground">{detail}</div>
+    </div>
+  );
+}
+
+function Sparkline({ values, stroke }: { values: number[]; stroke: string }) {
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const range = Math.max(1, max - min);
+  const points = values
+    .map((value, index) => {
+      const x = (index / Math.max(1, values.length - 1)) * 74 + 4;
+      const y = 28 - ((value - min) / range) * 20;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <svg
+      viewBox="0 0 82 32"
+      className="h-8 w-[82px] shrink-0"
+      role="img"
+      aria-label="Progress trend"
+    >
+      <polyline
+        points={points}
+        fill="none"
+        stroke={stroke}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+      <line x1="4" y1="28" x2="78" y2="28" stroke="#d8d4cc" strokeWidth="1" />
+    </svg>
+  );
+}
+
+function PortfolioSnapshot({ ideas }: { ideas: IdeaCard[] }) {
+  const total = ideas.length;
+  const pursue = ideas.filter((idea) => idea.mentorEvaluation?.verdict === "pursue").length;
+  const pause = ideas.filter((idea) => idea.mentorEvaluation?.verdict === "pause").length;
+  const drop = ideas.filter((idea) => idea.mentorEvaluation?.verdict === "drop").length;
+  const onTrack = ideas.filter((idea) => idea.status.toLowerCase().startsWith("on track")).length;
+  const watch = ideas.filter((idea) => idea.status.toLowerCase().startsWith("watch")).length;
+  const stopped = ideas.filter((idea) => idea.status.toLowerCase().startsWith("stop")).length;
+  const totalCheckIns = ideas.reduce((sum, idea) => sum + idea.checkIns.length, 0);
+  const managerBriefsReady = pursue;
+  const activeExperiments = Math.max(0, total - stopped);
+  const portfolioReadiness = getPortfolioReadiness(ideas);
+
+  const statusSegments = [
+    { label: "On track", value: onTrack, className: "bg-primary" },
+    { label: "Watch", value: watch, className: "bg-amber-500" },
+    { label: "Stopped", value: stopped, className: "bg-destructive" },
+  ];
+
+  const pipeline = [
+    { label: "Ideas", value: total },
+    { label: "Active", value: activeExperiments },
+    { label: "Pursue", value: pursue },
+    { label: "Briefs", value: managerBriefsReady },
+  ];
+
+  return (
+    <div className="mb-8 border border-border bg-card">
+      <div className="grid grid-cols-1 divide-y divide-border lg:grid-cols-[1.35fr_1fr] lg:divide-x lg:divide-y-0">
+        <div className="p-6">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <div>
+              <div className="eyebrow mb-1">Portfolio intelligence</div>
+              <p className="text-[12px] text-muted-foreground">
+                Team experiments moving toward manager-ready commitments.
+              </p>
+            </div>
+            <span className="border border-primary/30 bg-primary/5 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-primary">
+              {managerBriefsReady} brief{managerBriefsReady !== 1 ? "s" : ""} ready
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border md:grid-cols-4">
+            <MetricCell label="Experiments" value={total} />
+            <MetricCell label="Pursue" value={pursue} tone="primary" />
+            <MetricCell label="Pause" value={pause} tone="watch" />
+            <MetricCell label="Check-ins" value={totalCheckIns} />
+          </div>
+
+          <div className="mt-6">
+            <div className="mb-2 flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>Status distribution</span>
+              <span>
+                {onTrack} on track · {watch} watch · {stopped} stopped
+              </span>
+            </div>
+            <StackedBar segments={statusSegments} total={Math.max(1, total)} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 divide-y divide-border p-0 md:grid-cols-[1fr_220px] md:divide-x md:divide-y-0 lg:grid-cols-1 lg:divide-x-0 lg:divide-y">
+          <div className="p-6">
+            <div className="eyebrow mb-5">Pipeline</div>
+            <div className="space-y-4">
+              {pipeline.map((item) => (
+                <div key={item.label}>
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-[12px] text-muted-foreground">{item.label}</span>
+                    <span className="font-mono text-[12px] text-foreground">{item.value}</span>
+                  </div>
+                  <div className="h-1.5 bg-muted">
+                    <div
+                      className="h-full bg-primary"
+                      style={{
+                        width: `${total > 0 ? Math.max(6, (item.value / total) * 100) : 0}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 grid grid-cols-3 gap-px border border-border bg-border">
+              <MiniVerdict label="Pursue" value={pursue} className="text-primary" />
+              <MiniVerdict label="Pause" value={pause} className="text-amber-600" />
+              <MiniVerdict label="Drop" value={drop} className="text-destructive" />
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="eyebrow mb-3">Readiness radar</div>
+            <ReadinessRadar dimensions={portfolioReadiness} compact />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MetricCell({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone?: "primary" | "watch";
+}) {
+  const toneClass =
+    tone === "primary" ? "text-primary" : tone === "watch" ? "text-amber-600" : "text-foreground";
+
+  return (
+    <div className="bg-card p-4">
+      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className={`mt-2 font-serif text-[32px] leading-none ${toneClass}`}>{value}</div>
+    </div>
+  );
+}
+
+function StackedBar({
+  segments,
+  total,
+}: {
+  segments: { label: string; value: number; className: string }[];
+  total: number;
+}) {
+  return (
+    <div className="flex h-2 overflow-hidden bg-muted" aria-label="Status distribution">
+      {segments.map((segment) => {
+        if (segment.value === 0) return null;
+        return (
+          <div
+            key={segment.label}
+            className={segment.className}
+            title={`${segment.label}: ${segment.value}`}
+            style={{ width: `${(segment.value / total) * 100}%` }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function MiniVerdict({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: number;
+  className: string;
+}) {
+  return (
+    <div className="bg-card p-3 text-center">
+      <div className={`font-mono text-[16px] leading-none ${className}`}>{value}</div>
+      <div className="mt-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+    </div>
   );
 }
 
@@ -309,6 +603,8 @@ function IdeaRow({
             </div>
           </div>
 
+          {canCreateManagerBrief && <ReadinessProfile idea={idea} />}
+
           {canCreateManagerBrief && (
             <div className="border-t border-border bg-primary/5 px-8 py-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -347,6 +643,342 @@ function IdeaRow({
           />
         </div>
       )}
+    </div>
+  );
+}
+
+type ReadinessDimension = {
+  label: string;
+  value: number;
+  status: string;
+  note: string;
+};
+
+function getPortfolioReadiness(ideas: IdeaCard[]): ReadinessDimension[] {
+  const scoredIdeas = ideas.filter((idea) => idea.mentorEvaluation);
+  const sourceIdeas = scoredIdeas.length > 0 ? scoredIdeas : ideas;
+  const fallback = sourceIdeas[0];
+
+  if (!fallback) {
+    return [
+      {
+        label: "Problem strength",
+        value: 50,
+        status: "Mock",
+        note: "No experiments yet.",
+      },
+      {
+        label: "Experiment design",
+        value: 50,
+        status: "Mock",
+        note: "No experiments yet.",
+      },
+      {
+        label: "Evidence",
+        value: 30,
+        status: "Mock",
+        note: "No experiments yet.",
+      },
+      {
+        label: "Risk control",
+        value: 45,
+        status: "Mock",
+        note: "No experiments yet.",
+      },
+      {
+        label: "Manager readiness",
+        value: 40,
+        status: "Mock",
+        note: "No experiments yet.",
+      },
+    ];
+  }
+
+  const dimensionSets = sourceIdeas.map(getReadinessDimensions);
+
+  return dimensionSets[0].map((dimension, index) => ({
+    ...dimension,
+    value: Math.round(
+      dimensionSets.reduce((sum, set) => sum + set[index].value, 0) / dimensionSets.length,
+    ),
+    status: "Portfolio avg.",
+    note: "Average across evaluated experiments.",
+  }));
+}
+
+function getReadinessDimensions(idea: IdeaCard): ReadinessDimension[] {
+  const evaluation = idea.mentorEvaluation;
+  const latestDecision = idea.checkIns.at(-1)?.decision;
+  const hasCheckIns = idea.checkIns.length > 0;
+
+  return [
+    {
+      label: "Problem strength",
+      value: evaluation?.problemStrength === "strong" ? 88 : 58,
+      status: evaluation?.problemStrength === "strong" ? "Strong" : "Needs proof",
+      note:
+        evaluation?.problemStrength === "strong"
+          ? "Repeated pain with a clear owner."
+          : "Pain is plausible, but the audience needs sharper evidence.",
+    },
+    {
+      label: "Experiment design",
+      value: evaluation?.experimentQuality === "sharp" ? 86 : 56,
+      status: evaluation?.experimentQuality === "sharp" ? "Sharp" : "Loose",
+      note:
+        evaluation?.experimentQuality === "sharp"
+          ? "Small enough to test, specific enough to learn."
+          : "The test should be narrowed before scaling.",
+    },
+    {
+      label: "Evidence",
+      value: hasCheckIns ? (latestDecision === "continue" ? 72 : 58) : 38,
+      status: hasCheckIns ? "Emerging" : "Thin",
+      note: hasCheckIns
+        ? `${idea.checkIns.length} check-in${idea.checkIns.length !== 1 ? "s" : ""} recorded.`
+        : "No weekly learning has been recorded yet.",
+    },
+    {
+      label: "Risk control",
+      value: idea.stopSignal ? 74 : 42,
+      status: idea.stopSignal ? "Guarded" : "Unclear",
+      note: idea.stopSignal
+        ? "A stop condition is written before the team is attached."
+        : "Needs an explicit stop condition.",
+    },
+    {
+      label: "Manager readiness",
+      value: evaluation?.verdict === "pursue" ? 82 : 52,
+      status: evaluation?.verdict === "pursue" ? "Ready" : "Review",
+      note:
+        evaluation?.verdict === "pursue"
+          ? "Ready to become a manager-facing commitment brief."
+          : "Needs refinement before manager handoff.",
+    },
+  ];
+}
+
+function getInnovationFocus(idea: IdeaCard) {
+  const text = `${idea.problem} ${idea.experiment} ${idea.goSignal}`.toLowerCase();
+  const focus: string[] = [];
+
+  if (/(alert|incident|on-call|crash|failure|triage|monitor)/.test(text)) {
+    focus.push("Engineering operations");
+  }
+  if (/(time|hours|minutes|faster|drops|reduce|reduction)/.test(text)) {
+    focus.push("Cycle-time reduction");
+  }
+  if (/(accuracy|wrong|false|quality|correct)/.test(text)) {
+    focus.push("Quality control");
+  }
+  if (/(dashboard|metrics|signal|noise)/.test(text)) {
+    focus.push("Signal clarity");
+  }
+
+  return focus.slice(0, 3);
+}
+
+function ReadinessProfile({ idea }: { idea: IdeaCard }) {
+  const dimensions = getReadinessDimensions(idea);
+  const focus = getInnovationFocus(idea);
+  const average = Math.round(
+    dimensions.reduce((sum, dimension) => sum + dimension.value, 0) / dimensions.length,
+  );
+
+  return (
+    <div className="border-t border-border px-8 py-6">
+      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <div className="eyebrow mb-1">Innovation readiness profile</div>
+          <p className="max-w-[640px] text-[13px] leading-relaxed text-muted-foreground">
+            Assessment derived from mentor evaluation, experiment shape, risk guardrails, and
+            check-in evidence.
+          </p>
+        </div>
+        <div className="border border-border bg-background px-4 py-3 text-right">
+          <div className="font-serif text-[30px] leading-none text-primary">{average}</div>
+          <div className="mt-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+            Readiness
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.25fr_0.75fr]">
+        <div className="space-y-3">
+          {dimensions.map((dimension) => (
+            <ReadinessRow key={dimension.label} dimension={dimension} />
+          ))}
+        </div>
+
+        <div className="border border-border bg-muted/20 p-5">
+          <div className="mb-5">
+            <div className="eyebrow mb-3">Readiness radar</div>
+            <ReadinessRadar dimensions={dimensions} />
+          </div>
+
+          <div className="eyebrow mb-3">Innovation focus</div>
+          <div className="flex flex-wrap gap-2">
+            {focus.length > 0 ? (
+              focus.map((item) => (
+                <span
+                  key={item}
+                  className="border border-primary/30 bg-primary/5 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-primary"
+                >
+                  {item}
+                </span>
+              ))
+            ) : (
+              <span className="text-[12px] text-muted-foreground">Focus still emerging</span>
+            )}
+          </div>
+
+          {idea.mentorEvaluation?.biggestBlindspot && (
+            <div className="mt-5 border-t border-border pt-4">
+              <div className="eyebrow mb-2 text-amber-600">Watch item</div>
+              <p className="text-[12px] leading-relaxed text-muted-foreground">
+                {idea.mentorEvaluation.biggestBlindspot}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReadinessRadar({
+  dimensions,
+  compact = false,
+}: {
+  dimensions: ReadinessDimension[];
+  compact?: boolean;
+}) {
+  const size = compact ? 180 : 220;
+  const center = size / 2;
+  const radius = compact ? 58 : 72;
+  const labelRadius = compact ? 78 : 96;
+  const shortLabels = dimensions.map((dimension) =>
+    dimension.label
+      .replace("Problem strength", "Problem")
+      .replace("Experiment design", "Experiment")
+      .replace("Risk control", "Risk")
+      .replace("Manager readiness", "Manager"),
+  );
+
+  const getPoint = (index: number, value: number, pointRadius = radius) => {
+    const angle = -Math.PI / 2 + (index / dimensions.length) * Math.PI * 2;
+    const scaledRadius = pointRadius * (value / 100);
+    return {
+      x: center + Math.cos(angle) * scaledRadius,
+      y: center + Math.sin(angle) * scaledRadius,
+    };
+  };
+
+  const polygon = dimensions
+    .map((dimension, index) => {
+      const point = getPoint(index, dimension.value);
+      return `${point.x},${point.y}`;
+    })
+    .join(" ");
+
+  const gridLevels = [20, 40, 60, 80, 100];
+
+  return (
+    <div className="flex justify-center">
+      <svg
+        viewBox={`0 0 ${size} ${size}`}
+        className={compact ? "h-[180px] w-[180px]" : "h-[220px] w-[220px]"}
+        role="img"
+        aria-label="Readiness radar chart"
+      >
+        {gridLevels.map((level) => (
+          <polygon
+            key={level}
+            points={dimensions
+              .map((_, index) => {
+                const point = getPoint(index, level, radius);
+                return `${point.x},${point.y}`;
+              })
+              .join(" ")}
+            fill="none"
+            stroke="#d8d4cc"
+            strokeDasharray={level === 100 ? "0" : "2 3"}
+            strokeWidth="1"
+          />
+        ))}
+
+        {dimensions.map((_, index) => {
+          const edge = getPoint(index, 100, radius);
+          const labelPoint = getPoint(index, 100, labelRadius);
+          return (
+            <g key={shortLabels[index]}>
+              <line x1={center} y1={center} x2={edge.x} y2={edge.y} stroke="#d8d4cc" />
+              <text
+                x={labelPoint.x}
+                y={labelPoint.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="fill-muted-foreground font-mono text-[8px] uppercase tracking-wider"
+              >
+                {shortLabels[index]}
+              </text>
+            </g>
+          );
+        })}
+
+        <polygon
+          points={polygon}
+          fill="#005c3b"
+          fillOpacity="0.18"
+          stroke="#005c3b"
+          strokeWidth="2"
+        />
+        {dimensions.map((dimension, index) => {
+          const point = getPoint(index, dimension.value);
+          return (
+            <g key={dimension.label}>
+              <circle cx={point.x} cy={point.y} r="3" fill="#005c3b" />
+              {!compact && (
+                <text
+                  x={point.x}
+                  y={point.y - 8}
+                  textAnchor="middle"
+                  className="fill-primary font-mono text-[9px]"
+                >
+                  {dimension.value}
+                </text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function ReadinessRow({ dimension }: { dimension: ReadinessDimension }) {
+  const barClass =
+    dimension.value >= 80
+      ? "bg-primary"
+      : dimension.value >= 65
+        ? "bg-amber-500"
+        : "bg-destructive";
+
+  return (
+    <div className="grid gap-2 md:grid-cols-[170px_1fr_92px] md:items-center">
+      <div>
+        <div className="text-[13px] text-foreground">{dimension.label}</div>
+        <div className="text-[11px] text-muted-foreground">{dimension.status}</div>
+      </div>
+      <div>
+        <div className="h-1.5 bg-muted">
+          <div className={`h-full ${barClass}`} style={{ width: `${dimension.value}%` }} />
+        </div>
+        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{dimension.note}</p>
+      </div>
+      <div className="font-mono text-[12px] text-muted-foreground md:text-right">
+        {dimension.value}/100
+      </div>
     </div>
   );
 }
