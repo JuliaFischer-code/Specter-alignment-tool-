@@ -44,6 +44,9 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const navigate = useNavigate();
+  const [entered, setEntered] = useState(
+    () => typeof window !== "undefined" && sessionStorage.getItem("specter:intro-entered") === "1",
+  );
   const [answers, setAnswers] = useState<CommitmentData>(blankCommitment);
   const [step, setStep] = useState(0);
   const [missingFromPdf, setMissingFromPdf] = useState<string[]>([]);
@@ -65,6 +68,21 @@ function Index() {
   const readiness = Math.min(100, Math.round(coverage * 0.75 + Math.min(25, currentLength / 6)));
 
   const update = (v: string) => setAnswers((a) => ({ ...a, [current.id]: v }));
+
+  if (!entered) {
+    return (
+      <SpecterLanding
+        onEnterManager={() => {
+          sessionStorage.setItem("specter:intro-entered", "1");
+          setEntered(true);
+        }}
+        onEnterEngineer={() => {
+          sessionStorage.setItem("specter:intro-entered", "1");
+          navigate({ to: "/team" });
+        }}
+      />
+    );
+  }
 
   const next = () => {
     if (step < total - 1) setStep(step + 1);
@@ -336,6 +354,220 @@ function Index() {
         </div>
       </section>
     </AppShell>
+  );
+}
+
+function SpecterLanding({
+  onEnterManager,
+  onEnterEngineer,
+}: {
+  onEnterManager: () => void;
+  onEnterEngineer: () => void;
+}) {
+  const [portalOpen, setPortalOpen] = useState(false);
+  const [plunging, setPlunging] = useState(false);
+
+  function openPortal() {
+    if (portalOpen || plunging) return;
+    setPortalOpen(true);
+  }
+
+  function enterManager() {
+    if (plunging) return;
+    sessionStorage.setItem("specter:intro-entered", "1");
+    setPlunging(true);
+    window.setTimeout(onEnterManager, 760);
+  }
+
+  function enterEngineer() {
+    if (plunging) return;
+    sessionStorage.setItem("specter:intro-entered", "1");
+    setPlunging(true);
+    window.setTimeout(onEnterEngineer, 760);
+  }
+
+  return (
+    <main className="specter-landing relative min-h-screen overflow-hidden bg-[#020711] text-white">
+      <style>{`
+        @keyframes specterGridDrift {
+          0% { transform: rotateX(64deg) translateY(7%) scale(1); }
+          100% { transform: rotateX(64deg) translateY(18%) scale(1.16); }
+        }
+
+        @keyframes specterRingPulse {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.55; }
+          50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.9; }
+        }
+
+        @keyframes specterPlunge {
+          0% { transform: scale(1); filter: blur(0); opacity: 1; }
+          100% { transform: scale(1.55); filter: blur(10px); opacity: 0; }
+        }
+
+        @keyframes specterTitleDevour {
+          0% { transform: translateY(-8%) scale(1); opacity: 1; filter: blur(0); }
+          72% { opacity: 0.9; }
+          100% { transform: translateY(-54%) scale(0.12); opacity: 0; filter: blur(8px); }
+        }
+
+        @keyframes specterChoiceReveal {
+          0% { opacity: 0; filter: blur(8px); }
+          100% { opacity: 1; filter: blur(0); }
+        }
+
+        .specter-plunging {
+          animation: specterPlunge 760ms cubic-bezier(.17,.84,.44,1) forwards;
+        }
+
+        .specter-title-devoured {
+          animation: specterTitleDevour 980ms cubic-bezier(.19,1,.22,1) forwards;
+        }
+
+        .specter-choice-reveal {
+          animation: specterChoiceReveal 520ms ease-out 520ms both;
+        }
+
+        .specter-grid {
+          background-image:
+            repeating-radial-gradient(ellipse at 50% 46%, transparent 0 28px, rgba(255,255,255,.72) 29px 31px, transparent 32px 58px),
+            repeating-conic-gradient(from -4deg at 50% 46%, rgba(255,255,255,.68) 0deg 0.65deg, transparent 0.65deg 6deg);
+          animation: specterGridDrift 5.8s linear infinite;
+          mask-image: radial-gradient(ellipse at center, transparent 0 8%, black 11% 82%, transparent 96%);
+          -webkit-mask-image: radial-gradient(ellipse at center, transparent 0 8%, black 11% 82%, transparent 96%);
+        }
+      `}</style>
+
+      <div
+        className={
+          "relative min-h-screen transition-transform duration-500 " +
+          (plunging ? "specter-plunging" : "")
+        }
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_37%,rgba(36,191,122,0.2),transparent_20%),radial-gradient(circle_at_50%_52%,rgba(23,52,93,0.7),transparent_42%),linear-gradient(180deg,#07122f_0%,#020711_48%,#010306_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-[#24bf7a]" />
+
+        <div
+          onClick={openPortal}
+          className="group absolute inset-0 z-10 cursor-pointer overflow-hidden text-left outline-none"
+        >
+          <div className="absolute inset-x-[-30vw] bottom-[-30vh] top-[-4vh] [perspective:920px]">
+            <div className="specter-grid absolute inset-[-18%] origin-center opacity-85 transition-all duration-700 group-hover:opacity-100" />
+          </div>
+          <div className="absolute left-1/2 top-[39%] h-[26vh] min-h-[160px] w-[32vw] min-w-[260px] -translate-x-1/2 -translate-y-1/2 rounded-[50%] bg-black shadow-[0_0_34px_18px_rgba(0,0,0,1),0_0_76px_34px_rgba(36,191,122,0.22),0_0_150px_72px_rgba(23,52,93,0.42)] transition-transform duration-700 group-hover:scale-110" />
+          <div className="absolute left-1/2 top-[39%] h-[32vh] min-h-[220px] w-[45vw] min-w-[390px] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-[#24bf7a]/35 [animation:specterRingPulse_3.2s_ease-in-out_infinite]" />
+          <div className="absolute left-1/2 top-[39%] h-[48vh] min-h-[360px] w-[70vw] min-w-[620px] -translate-x-1/2 -translate-y-1/2 rotate-[-12deg] rounded-[50%] border border-[#17345d]/80" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_39%,transparent_0_16%,rgba(2,7,17,0.05)_18%,rgba(2,7,17,0.82)_82%),linear-gradient(180deg,rgba(2,7,17,0.08),rgba(2,7,17,0.65))]" />
+
+          <section
+            className={
+              "absolute inset-x-0 top-1/2 z-20 mx-auto flex max-w-[980px] flex-col items-center px-6 text-center " +
+              (portalOpen ? "specter-title-devoured" : "-translate-y-[8%]")
+            }
+          >
+            <SpecterLandingMark />
+            <h1 className="mt-6 font-serif text-[82px] font-bold leading-[0.88] tracking-normal text-white drop-shadow-[0_10px_40px_rgba(0,0,0,0.65)] md:text-[148px]">
+              Specter
+            </h1>
+            <div className="mt-5 inline-flex rounded-[8px] border border-[#24bf7a]/35 bg-[#24bf7a]/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.22em] text-[#24bf7a] backdrop-blur-md">
+              Know where the line is
+            </div>
+            <p className="mt-5 max-w-[620px] text-[16px] font-semibold leading-relaxed text-white/72">
+              Define the line, test the signal, and see when a pilot starts bending out of shape.
+            </p>
+            <div className="mt-8 flex items-center gap-2 text-[13px] font-black uppercase tracking-[0.12em] text-[#24bf7a]">
+              Open governance field <ArrowRight className="h-4 w-4" />
+            </div>
+          </section>
+
+          {portalOpen && (
+            <section className="specter-choice-reveal absolute inset-x-0 top-1/2 z-30 mx-auto grid max-w-[1180px] -translate-y-1/2 grid-cols-1 gap-5 px-6 md:grid-cols-2">
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  enterManager();
+                }}
+                className="group/choice rounded-[10px] border border-[#24bf7a]/28 bg-[#07122f]/74 p-6 text-left shadow-[0_24px_90px_rgba(0,0,0,0.34)] backdrop-blur-md transition-transform hover:-translate-y-1 hover:border-[#24bf7a]/70"
+              >
+                <div className="text-[11px] font-black uppercase tracking-[0.18em] text-[#24bf7a]">
+                  Manager
+                </div>
+                <div className="mt-3 font-sans text-[34px] font-black leading-none text-white">
+                  Commitment series
+                </div>
+                <p className="mt-4 max-w-[420px] text-[14px] font-semibold leading-relaxed text-white/65">
+                  Define the affordable-loss line, generate the commitment, and run governance
+                  check-ins.
+                </p>
+                <div className="mt-6 flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.12em] text-[#24bf7a]">
+                  Enter manager flow <ArrowRight className="h-4 w-4" />
+                </div>
+              </button>
+
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  enterEngineer();
+                }}
+                className="group/choice rounded-[10px] border border-white/14 bg-white/10 p-6 text-left shadow-[0_24px_90px_rgba(0,0,0,0.34)] backdrop-blur-md transition-transform hover:-translate-y-1 hover:border-white/45"
+              >
+                <div className="text-[11px] font-black uppercase tracking-[0.18em] text-white/60">
+                  Engineer
+                </div>
+                <div className="mt-3 font-sans text-[34px] font-black leading-none text-white">
+                  Experiment series
+                </div>
+                <p className="mt-4 max-w-[420px] text-[14px] font-semibold leading-relaxed text-white/65">
+                  Shape a small bet, test the evidence, and decide whether the idea deserves a
+                  handoff.
+                </p>
+                <div className="mt-6 flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.12em] text-white">
+                  Enter engineer flow <ArrowRight className="h-4 w-4" />
+                </div>
+              </button>
+            </section>
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function SpecterLandingMark() {
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      className="h-20 w-20 shrink-0 drop-shadow-[0_10px_30px_rgba(36,191,122,0.2)] md:h-24 md:w-24"
+      role="img"
+      aria-label="Specter logo"
+    >
+      <circle cx="32" cy="32" r="25" fill="none" stroke="#17345d" strokeWidth="1.5" />
+      <circle cx="32" cy="32" r="16" fill="none" stroke="#24bf7a" strokeWidth="3" />
+      <circle cx="32" cy="32" r="7" fill="none" stroke="#24bf7a" strokeWidth="3" />
+      <ellipse
+        cx="32"
+        cy="32"
+        rx="29"
+        ry="11"
+        fill="none"
+        stroke="#24bf7a"
+        strokeWidth="2"
+        transform="rotate(-16 32 32)"
+      />
+      <ellipse
+        cx="32"
+        cy="32"
+        rx="28"
+        ry="17"
+        fill="none"
+        stroke="#17345d"
+        strokeOpacity="0.85"
+        strokeWidth="1.5"
+        transform="rotate(24 32 32)"
+      />
+      <line x1="11" y1="32" x2="53" y2="32" stroke="#24bf7a" strokeWidth="2" />
+      <line x1="32" y1="11" x2="32" y2="53" stroke="#24bf7a" strokeWidth="2" />
+      <circle cx="32" cy="32" r="3" fill="#24bf7a" />
+    </svg>
   );
 }
 

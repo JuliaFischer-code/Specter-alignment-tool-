@@ -42,6 +42,10 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
       ? "bg-foreground text-background"
       : "text-muted-foreground hover:text-foreground";
 
+  const markIntroEntered = () => {
+    sessionStorage.setItem("specter:intro-entered", "1");
+  };
+
   return (
     <div
       className={`min-h-screen text-foreground ${dashboardSkin ? "bg-[#f4f2f3]" : "bg-background"}`}
@@ -54,7 +58,7 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
         }
       >
         <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between px-8">
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/" onClick={markIntroEntered} className="flex items-center gap-3">
             <SpecterMark small={!dashboardSkin} />
             <span
               className={
@@ -83,6 +87,7 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
                 <Link
                   key={item.to}
                   to={item.to}
+                  onClick={item.to === "/" ? markIntroEntered : undefined}
                   className={
                     "group relative rounded-[8px] px-4 py-2 text-[13px] font-semibold transition-colors " +
                     (dashboardSkin
@@ -123,6 +128,7 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
           >
             <button
               onClick={() => {
+                markIntroEntered();
                 setMode("manager");
                 navigate({ to: "/" });
               }}
