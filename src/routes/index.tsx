@@ -46,9 +46,11 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const navigate = useNavigate();
-  const [entered, setEntered] = useState(
-    () => typeof window !== "undefined" && sessionStorage.getItem("specter:intro-entered") === "1",
-  );
+  const [entered, setEntered] = useState(() => {
+    if (typeof window === "undefined") return false;
+    if (new URLSearchParams(window.location.search).has("intro")) return false;
+    return sessionStorage.getItem("specter:intro-entered") === "1";
+  });
   const [answers, setAnswers] = useState<CommitmentData>(blankCommitment);
   const [step, setStep] = useState(0);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
@@ -179,8 +181,8 @@ function Index() {
                   Decide what you can afford to lose
                 </h1>
                 <p className="mt-5 max-w-[720px] text-[16px] leading-relaxed text-white/70">
-                  Turn a proposed AI pilot into a concrete commitment: owner, budget ceiling, time-box,
-                  kill criteria, and continuation signal.
+                  Turn a proposed AI pilot into a concrete commitment: owner, budget ceiling,
+                  time-box, kill criteria, and continuation signal.
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3 self-end">
@@ -392,21 +394,26 @@ function Index() {
 }
 
 const BH_CSS = `
-  @keyframes bhRingCW  { to { transform: rotate( 360deg); } }
-  @keyframes bhRingCCW { to { transform: rotate(-360deg); } }
+  @keyframes bhBackdropDrift {
+    0%   { transform: scale(1.03) translate3d(0, 0, 0); }
+    50%  { transform: scale(1.08) translate3d(-1.2%, 0.8%, 0); }
+    100% { transform: scale(1.03) translate3d(0, 0, 0); }
+  }
   .mode-card {
     position: relative;
     overflow: visible;
-    border: 1px solid rgba(34,197,94,0.3);
-    transition: transform 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.22);
+    transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, background 0.35s ease;
   }
   .mode-card:hover {
-    border-color: rgba(34,197,94,1.0);
-    box-shadow: 0 0 12px rgba(34,197,94,0.6), 0 0 30px rgba(34,197,94,0.25);
+    background: rgba(7,18,47,0.78);
+    border-color: rgba(36,191,122,0.58);
+    box-shadow: 0 0 6px rgba(36,191,122,0.24), 0 0 24px rgba(36,191,122,0.14), 0 24px 80px rgba(0,0,0,0.32);
+    transform: translateY(-4px);
   }
-  @keyframes bhGridPulse {
-    0%, 100% { opacity: 0.28; }
-    50%       { opacity: 0.40; }
+  .mode-card[data-variant="engineer"]:hover {
+    border-color: rgba(76,165,213,0.62);
+    box-shadow: 0 0 6px rgba(76,165,213,0.24), 0 0 24px rgba(36,191,122,0.12), 0 24px 80px rgba(0,0,0,0.32);
   }
   @keyframes bhExpand {
     0%   { transform: translate(-50%,-50%) scale(1);  }
@@ -426,14 +433,6 @@ const BH_CSS = `
   }
 `;
 
-const BH_RINGS = [
-  { rx: 410, ry: 112, stroke: '#0a2e2e', sw: 0.8, dur: '32s', cw: true  },
-  { rx: 320, ry: 87,  stroke: '#0c3838', sw: 1,   dur: '28s', cw: false },
-  { rx: 228, ry: 62,  stroke: '#0f4444', sw: 1.3, dur: '25s', cw: true  },
-  { rx: 145, ry: 40,  stroke: '#145252', sw: 1.6, dur: '22s', cw: false },
-  { rx: 74,  ry: 21,  stroke: '#196060', sw: 1.8, dur: '20s', cw: true  },
-];
-
 function SpecterLanding({
   onEnterManager,
   onEnterEngineer,
@@ -441,136 +440,211 @@ function SpecterLanding({
   onEnterManager: () => void;
   onEnterEngineer: () => void;
 }) {
-  const [phase, setPhase] = useState<'idle' | 'collapsing' | 'selecting'>('idle');
+  const [phase, setPhase] = useState<"idle" | "collapsing" | "selecting">("idle");
   const clickedRef = useRef(false);
 
   function handleClick() {
     if (clickedRef.current) return;
     clickedRef.current = true;
-    setPhase('collapsing');
-    window.setTimeout(() => setPhase('selecting'), 1000);
+    setPhase("collapsing");
+    window.setTimeout(() => setPhase("selecting"), 1000);
   }
 
-  const isIdle = phase === 'idle';
-  const isCollapsing = phase === 'collapsing';
-  const isSelecting = phase === 'selecting';
+  const isIdle = phase === "idle";
+  const isCollapsing = phase === "collapsing";
+  const isSelecting = phase === "selecting";
 
   return (
     <main
       style={{
-        position: 'fixed', inset: 0, background: '#060910',
-        overflow: 'hidden', userSelect: 'none',
-        cursor: isSelecting ? 'default' : 'pointer',
+        position: "fixed",
+        inset: 0,
+        background: "#060910",
+        overflow: "hidden",
+        userSelect: "none",
+        cursor: isSelecting ? "default" : "pointer",
       }}
       onClick={handleClick}
     >
       <style>{BH_CSS}</style>
 
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-        <div style={{
-          position: 'absolute', inset: '-60%',
-          backgroundImage:
-            'linear-gradient(to right,#0a3a3a 1px,transparent 1px),' +
-            'linear-gradient(to bottom,#0a3a3a 1px,transparent 1px)',
-          backgroundSize: '60px 60px',
-          transform: 'perspective(700px) rotateX(68deg) translateY(-10%) scale(1.3)',
-          transition: 'opacity 0.8s ease',
-          animation: isSelecting ? undefined : 'bhGridPulse 10s ease-in-out infinite',
-          opacity: isSelecting ? 0.15 : undefined,
-        }} />
-      </div>
-
-      {!isSelecting && (
-        <svg
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', pointerEvents: 'none' }}
-          viewBox="0 0 1000 600"
-          preserveAspectRatio="xMidYMid slice"
-        >
-          {BH_RINGS.map((ring, i) => (
-            <ellipse
-              key={i}
-              cx="500" cy="300"
-              rx={ring.rx} ry={ring.ry}
-              stroke={ring.stroke} strokeWidth={ring.sw} fill="none"
-              style={{
-                transformOrigin: '500px 300px',
-                animation: `${ring.cw ? 'bhRingCW' : 'bhRingCCW'} ${ring.dur} linear infinite`,
-              }}
-            />
-          ))}
-        </svg>
-      )}
+      <img
+        src="/singularity-proof-lede1300.gif"
+        alt=""
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          opacity: isSelecting ? 0.38 : 0.72,
+          filter: isSelecting
+            ? "brightness(0.38) contrast(1.06) saturate(0.72)"
+            : "brightness(0.64) contrast(1.08) saturate(0.78)",
+          transform: isCollapsing ? "scale(1.18)" : "scale(1.03)",
+          transition: "opacity 700ms ease, filter 700ms ease, transform 900ms ease",
+          animation: isSelecting ? undefined : "bhBackdropDrift 18s ease-in-out infinite",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(circle at 50% 58%, rgba(0,0,0,0.02) 0%, rgba(7,18,47,0.28) 42%, rgba(3,6,14,0.82) 100%), linear-gradient(180deg, rgba(7,18,47,0.42), rgba(3,6,14,0.72))",
+          pointerEvents: "none",
+        }}
+      />
 
       {isCollapsing && (
-        <div style={{
-          position: 'absolute', left: '50%', top: '50%',
-          width: 'clamp(220px,28vw,400px)', height: 'clamp(120px,18vh,240px)',
-          background: '#000', borderRadius: '50%', zIndex: 50,
-          animation: 'bhExpand 800ms ease-in forwards',
-          pointerEvents: 'none',
-        }} />
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            width: "clamp(220px,28vw,400px)",
+            height: "clamp(120px,18vh,240px)",
+            background: "#000",
+            borderRadius: "50%",
+            zIndex: 50,
+            animation: "bhExpand 800ms ease-in forwards",
+            pointerEvents: "none",
+          }}
+        />
       )}
 
       {!isSelecting && (
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          animation: isCollapsing ? 'bhTitleSuck 600ms cubic-bezier(0.4,0,1,1) forwards' : undefined,
-        }}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 10,
+            pointerEvents: "none",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "clamp(24px, 5vw, 64px)",
+            textAlign: "center",
+            animation: isCollapsing
+              ? "bhTitleSuck 600ms cubic-bezier(0.4,0,1,1) forwards"
+              : undefined,
+          }}
+        >
           <SpecterLandingMark />
-          <h1 style={{
-            fontFamily: '"Georgia","Times New Roman",serif',
-            fontSize: 'clamp(64px,12vw,148px)', fontWeight: 700,
-            color: '#fff', lineHeight: 0.88, margin: '24px 0 0',
-            textShadow: '0 10px 40px rgba(0,0,0,.65)',
-          }}>
+          <h1
+            style={{
+              fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
+              fontSize: "clamp(76px,13vw,170px)",
+              fontWeight: 900,
+              color: "#fff",
+              lineHeight: 0.82,
+              margin: "22px 0 0",
+              letterSpacing: "-0.045em",
+              textShadow: "0 10px 36px rgba(0,0,0,.76)",
+            }}
+          >
             Specter
           </h1>
-          <p style={{
-            fontFamily: '"Courier New",Courier,monospace',
-            fontSize: '11px', fontWeight: 700, letterSpacing: '0.22em',
-            color: '#00ffcc', textTransform: 'uppercase', margin: '20px 0 0',
-          }}>
+          <p
+            style={{
+              fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+              fontSize: "11px",
+              fontWeight: 700,
+              letterSpacing: "0.22em",
+              color: "#24bf7a",
+              textTransform: "uppercase",
+              margin: "22px 0 0",
+              padding: "8px 14px",
+              borderRadius: "999px",
+              border: "1px solid rgba(36,191,122,0.34)",
+              background: "rgba(7,18,47,0.58)",
+            }}
+          >
             KNOW WHERE THE LINE IS
+          </p>
+          <p
+            style={{
+              margin: "24px 0 0",
+              maxWidth: "720px",
+              color: "rgba(255,255,255,0.72)",
+              fontSize: "clamp(15px,1.7vw,19px)",
+              fontWeight: 700,
+              lineHeight: 1.5,
+              textShadow: "0 8px 24px rgba(0,0,0,0.78)",
+            }}
+          >
+            Define the line, test the signal, and see when a pilot starts bending out of shape.
           </p>
         </div>
       )}
 
       {isIdle && (
-        <p style={{
-          position: 'absolute', bottom: '7%', left: 0, right: 0,
-          textAlign: 'center', zIndex: 15, pointerEvents: 'none',
-          fontFamily: '"Courier New",Courier,monospace', fontSize: '12px',
-          letterSpacing: '0.15em', color: '#22c55e', textTransform: 'uppercase',
-          animation: 'bhClickPulse 2.4s ease-in-out infinite',
-        }}>
+        <p
+          style={{
+            position: "absolute",
+            bottom: "7%",
+            left: 0,
+            right: 0,
+            textAlign: "center",
+            zIndex: 15,
+            pointerEvents: "none",
+            fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+            fontSize: "12px",
+            letterSpacing: "0.15em",
+            color: "#22c55e",
+            textTransform: "uppercase",
+            animation: "bhClickPulse 2.4s ease-in-out infinite",
+          }}
+        >
           click anywhere to enter
         </p>
       )}
 
       {isSelecting && (
-        <div style={{
-          position: 'absolute', left: '50%', top: '50%',
-          width: '100%', maxWidth: '1100px', padding: '0 24px',
-          display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '20px',
-          zIndex: 20, boxSizing: 'border-box',
-          animation: 'bhCardsReveal 600ms ease both',
-        }}>
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            width: "100%",
+            maxWidth: "1100px",
+            padding: "0 24px",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "20px",
+            zIndex: 20,
+            boxSizing: "border-box",
+            animation: "bhCardsReveal 600ms ease both",
+          }}
+        >
           <ModeCard
-            label="MANAGER" labelColor="#22c55e"
+            variant="manager"
+            label="MANAGER"
+            labelColor="#22c55e"
             title="Commitment series"
             description="Define the affordable-loss line, generate the commitment, and run governance check-ins."
-            cta="ENTER MANAGER FLOW →" ctaColor="#22c55e"
-            border="rgba(34,197,94,0.25)" hoverBorder="rgba(34,197,94,0.6)"
-            onClick={(e) => { e.stopPropagation(); onEnterManager(); }}
+            cta="ENTER MANAGER FLOW →"
+            ctaColor="#22c55e"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEnterManager();
+            }}
           />
           <ModeCard
-            label="ENGINEER" labelColor="#22c55e"
+            variant="engineer"
+            label="ENGINEER"
+            labelColor="#9bd8ff"
             title="Experiment series"
             description="Shape a small bet, test the evidence, and decide whether the idea deserves a handoff."
-            cta="ENTER ENGINEER FLOW →" ctaColor="#22c55e"
-            border="rgba(255,255,255,0.08)" hoverBorder="rgba(255,255,255,0.28)"
-            onClick={(e) => { e.stopPropagation(); onEnterEngineer(); }}
+            cta="ENTER ENGINEER FLOW →"
+            ctaColor="#9bd8ff"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEnterEngineer();
+            }}
           />
         </div>
       )}
@@ -579,43 +653,86 @@ function SpecterLanding({
 }
 
 function ModeCard({
-  label, labelColor, title, description, cta, ctaColor, border, hoverBorder, onClick,
+  variant,
+  label,
+  labelColor,
+  title,
+  description,
+  cta,
+  ctaColor,
+  onClick,
 }: {
-  label: string; labelColor: string; title: string; description: string;
-  cta: string; ctaColor: string; border: string; hoverBorder: string;
+  variant: "manager" | "engineer";
+  label: string;
+  labelColor: string;
+  title: string;
+  description: string;
+  cta: string;
+  ctaColor: string;
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
-  const [hovered, setHovered] = useState(false);
   return (
     <button
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       className="mode-card"
+      data-variant={variant}
       style={{
-        background: 'rgba(255,255,255,0.04)',
-        borderRadius: '12px', padding: '32px', textAlign: 'left',
-        cursor: 'pointer', color: '#fff',
-        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
-        backdropFilter: 'blur(8px)',
+        background: "rgba(8,12,20,0.70)",
+        borderRadius: "18px",
+        padding: "32px",
+        textAlign: "left",
+        cursor: "pointer",
+        color: "#fff",
+        backdropFilter: "blur(10px)",
+        minHeight: "250px",
       }}
     >
-      <div style={{
-        fontSize: '11px', fontWeight: 700, letterSpacing: '0.18em',
-        color: labelColor, textTransform: 'uppercase', fontFamily: 'monospace',
-      }}>
+      <div
+        style={{
+          fontSize: "11px",
+          fontWeight: 700,
+          letterSpacing: "0.18em",
+          color: labelColor,
+          textTransform: "uppercase",
+          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+        }}
+      >
         {label}
       </div>
-      <div style={{ fontSize: '34px', fontWeight: 800, color: '#fff', marginTop: '12px', lineHeight: 1.1 }}>
+      <div
+        style={{
+          fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
+          fontSize: "clamp(30px,4vw,44px)",
+          fontWeight: 900,
+          letterSpacing: "-0.04em",
+          color: "#fff",
+          marginTop: "14px",
+          lineHeight: 0.98,
+        }}
+      >
         {title}
       </div>
-      <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', marginTop: '16px', lineHeight: 1.65 }}>
+      <p
+        style={{
+          fontSize: "14px",
+          color: "rgba(255,255,255,0.6)",
+          marginTop: "16px",
+          lineHeight: 1.65,
+        }}
+      >
         {description}
       </p>
-      <div style={{
-        fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em',
-        color: ctaColor, marginTop: '24px', textTransform: 'uppercase', fontFamily: 'monospace',
-      }}>
+      <div
+        style={{
+          fontSize: "12px",
+          fontWeight: 700,
+          letterSpacing: "0.12em",
+          color: ctaColor,
+          marginTop: "24px",
+          textTransform: "uppercase",
+          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+        }}
+      >
         {cta}
       </div>
     </button>
@@ -626,7 +743,7 @@ function SpecterLandingMark() {
   return (
     <svg
       viewBox="0 0 64 64"
-      className="h-20 w-20 shrink-0 drop-shadow-[0_10px_30px_rgba(36,191,122,0.2)] md:h-24 md:w-24"
+      className="h-20 w-20 shrink-0 opacity-90 drop-shadow-[0_8px_22px_rgba(36,191,122,0.12)] md:h-24 md:w-24"
       role="img"
       aria-label="Specter logo"
     >
@@ -713,9 +830,7 @@ function ManagerReadinessPanel({
               key={check.label}
               className={
                 "flex items-center gap-3 rounded-[10px] px-3 py-2 text-[13px] font-semibold " +
-                (check.active
-                  ? "bg-[#f4f6f9] text-[#07122f]"
-                  : "text-[#697081]")
+                (check.active ? "bg-[#f4f6f9] text-[#07122f]" : "text-[#697081]")
               }
             >
               <Icon className={check.active ? "h-4 w-4 text-[#24bf7a]" : "h-4 w-4"} />
