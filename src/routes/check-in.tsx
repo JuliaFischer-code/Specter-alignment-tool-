@@ -4,12 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   Activity,
   AlertTriangle,
-  ArrowRight,
-  CheckCircle2,
+  BarChart3,
   FileText,
   Gauge,
+  Grid2X2,
   History,
   Save,
+  Sparkles,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { useCommitment, useCheckIns, type CheckInEntry } from "@/lib/commitment-store";
@@ -34,9 +35,15 @@ export const Route = createFileRoute("/check-in")({
 });
 
 type Status = "on-track" | "watch" | "breach";
+type DimensionKey =
+  | "budgetCeiling"
+  | "timeBox"
+  | "reputationalRisk"
+  | "opportunityCost"
+  | "killCriteria";
 
 const dimensions: {
-  key: "budgetCeiling" | "timeBox" | "reputationalRisk" | "opportunityCost" | "killCriteria";
+  key: DimensionKey;
   label: string;
   question: string;
   hint: string;
@@ -117,6 +124,54 @@ function getLimitProximity(original: string | undefined, current: string | undef
     percent,
     label:
       percent >= 100 ? "Limit crossed" : percent >= 75 ? "Close to boundary" : "Inside boundary",
+  };
+}
+
+function scoreToRisk(score: Status | undefined, proximityPercent?: number) {
+  const statusRisk =
+    score === "breach" ? 100 : score === "watch" ? 68 : score === "on-track" ? 32 : 0;
+  return Math.max(statusRisk, proximityPercent || 0);
+}
+
+function getRiskLabel(risk: number) {
+  if (risk >= 85) return "Breach";
+  if (risk >= 60) return "Watch";
+  if (risk > 0) return "On track";
+  return "Not scored";
+}
+
+function getRiskClass(risk: number) {
+  if (risk >= 85) return "bg-red-600";
+  if (risk >= 60) return "bg-[#d79000]";
+  if (risk > 0) return "bg-[#24bf7a]";
+  return "bg-[#d9d5d2]";
+}
+
+function getDemoCheckInData() {
+  return {
+    currentValues: {
+      budgetCeiling: "$45,000 spent so far",
+      timeBox: "4 of 12 weeks elapsed",
+      killCriteria:
+        "No stop condition triggered; triage accuracy is 78% against an 80% continuation signal",
+      reputationalRisk: "Still internal-only; no customer-facing recommendations released",
+      opportunityCost:
+        "Rules-engine migration delayed by two weeks, but the sponsor accepts the trade-off",
+    },
+    notes: {
+      budgetCeiling: "Vendor invoice and engineering time remain below the written ceiling.",
+      timeBox: "Pilot is one third through the original time-box and still has review capacity.",
+      killCriteria: "Close to the success line, but not a hard stop. Needs next-week evidence.",
+      reputationalRisk: "Exposure has not expanded beyond the kickoff commitment.",
+      opportunityCost: "Team still sees the displaced work as acceptable for this cycle.",
+    },
+    scores: {
+      budgetCeiling: "on-track",
+      timeBox: "on-track",
+      killCriteria: "watch",
+      reputationalRisk: "on-track",
+      opportunityCost: "watch",
+    } satisfies Record<DimensionKey, Status>,
   };
 }
 
@@ -215,9 +270,10 @@ function CheckInPage() {
   const [error, setError] = useState<string | null>(null);
   const runAnalysis = useServerFn(analyzeCheckIn);
 
-  const verdict = useMemo<Status>(() => {
+  const verdict = useMemo<Status | null>(() => {
     if (analysis) return analysis.overallVerdict;
     const vals = Object.values(scores);
+    if (vals.length === 0) return null;
     if (vals.includes("breach")) return "breach";
     if (vals.includes("watch")) return "watch";
     return "on-track";
@@ -260,19 +316,32 @@ function CheckInPage() {
   const completed = Object.keys(scores).length;
   const total = dimensions.length;
   const latestCheckIn = checkIns.at(-1);
+  const hasResults = completed > 0 || Boolean(analysis);
 
-  function handleSaveCheckIn(overrideVerdict?: Status) {
+  function handleSaveCheckIn(overrideVerdict?: Status, overrideScores?: Record<string, Status>) {
+    const entryVerdict = overrideVerdict || verdict;
+    if (!entryVerdict) return;
     const entry: CheckInEntry = {
       id: createCheckInId(),
       createdAt: new Date().toISOString(),
-      verdict: overrideVerdict || verdict,
-      scores,
+      verdict: entryVerdict,
+      scores: overrideScores || scores,
       currentValues,
       notes,
     };
     addCheckIn(entry);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+  }
+
+  function applyDemoCheckIn() {
+    const demo = getDemoCheckInData();
+    setCurrentValues(demo.currentValues);
+    setNotes(demo.notes);
+    setScores(demo.scores);
+    setAnalysis(null);
+    setSaved(false);
+    setError(null);
   }
 
   async function handleAnalyze() {
@@ -300,9 +369,10 @@ function CheckInPage() {
       setAnalysis(result);
       const next: Record<string, Status> = {};
       for (const dim of result.dimensions) next[dim.key] = dim.verdict;
-      setScores((prev) => ({ ...prev, ...next }));
+      const nextScores = { ...scores, ...next };
+      setScores(nextScores);
       // Auto-save after AI analysis
-      handleSaveCheckIn(result.overallVerdict);
+      handleSaveCheckIn(result.overallVerdict, nextScores);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Analysis failed");
     } finally {
@@ -341,15 +411,17 @@ function CheckInPage() {
             <div className="sticky top-8 rounded-[8px] bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
               <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
                 <Activity className="h-4 w-4 text-[#24bf7a]" />
-                Live verdict
+                Review status
               </div>
               <div className="mt-4 flex items-center gap-3">
-                <span className={`h-3 w-3 ${statusMeta[verdict].dot}`} />
+                <span className={`h-3 w-3 ${verdict ? statusMeta[verdict].dot : "bg-[#d9d5d2]"}`} />
                 <span className="text-[34px] font-black leading-none text-[#07122f]">
-                  {statusMeta[verdict].label}
+                  {verdict ? statusMeta[verdict].label : "Awaiting review"}
                 </span>
               </div>
               <p className="mt-4 text-[13px] font-medium leading-relaxed text-[#697081]">
+                {!verdict &&
+                  "Add current evidence and score the dimensions before Specter shows a management verdict."}
                 {verdict === "breach" &&
                   "At least one dimension has crossed the line you drew at kickoff. Convene the sponsor before continuing."}
                 {verdict === "watch" &&
@@ -396,6 +468,14 @@ function CheckInPage() {
                   : analysis
                     ? "Re-run AI analysis"
                     : "Run AI accountability review"}
+              </button>
+
+              <button
+                onClick={applyDemoCheckIn}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-[8px] border border-[#dff5eb] bg-[#dff5eb] px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#c7efd9]"
+              >
+                <Sparkles className="h-4 w-4 text-[#08764c]" />
+                Load demo check-in
               </button>
 
               <button
@@ -540,7 +620,18 @@ function CheckInPage() {
                     </div>
                   )}
 
-                  <div className="mt-6 flex flex-wrap gap-2">
+                  <textarea
+                    value={notes[d.key] || ""}
+                    onChange={(e) => setNotes((n) => ({ ...n, [d.key]: e.target.value }))}
+                    placeholder="What changed since the last check-in? Evidence, anecdote, number."
+                    rows={3}
+                    className="mt-4 w-full resize-none rounded-[8px] border border-[#e4e0de] bg-[#f7f5f4] p-3 text-[14px] font-medium text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
+                  />
+
+                  <div className="mt-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                    Manager assessment
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
                     {(Object.keys(statusMeta) as Status[]).map((s) => {
                       const active = selfScore === s;
                       return (
@@ -560,19 +651,20 @@ function CheckInPage() {
                       );
                     })}
                   </div>
-
-                  <textarea
-                    value={notes[d.key] || ""}
-                    onChange={(e) => setNotes((n) => ({ ...n, [d.key]: e.target.value }))}
-                    placeholder="What changed since the last check-in? Evidence, anecdote, number."
-                    rows={3}
-                    className="mt-4 w-full resize-none rounded-[8px] border border-[#e4e0de] bg-[#f7f5f4] p-3 text-[14px] font-medium text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
-                  />
                 </div>
               );
             })}
           </div>
         </div>
+
+        {hasResults && (
+          <CheckInResultsDashboard
+            analysis={analysis}
+            currentValues={currentValues}
+            data={data}
+            scores={scores}
+          />
+        )}
       </section>
 
       {analysis && (
@@ -617,6 +709,177 @@ function CheckInPage() {
 
       <div className="h-24" />
     </AppShell>
+  );
+}
+
+function CheckInResultsDashboard({
+  analysis,
+  currentValues,
+  data,
+  scores,
+}: {
+  analysis: CheckInAnalysis | null;
+  currentValues: Record<string, string>;
+  data: NonNullable<ReturnType<typeof useCommitment>["data"]>;
+  scores: Record<string, Status>;
+}) {
+  const riskRows = dimensions.map((d, index) => {
+    const proximity = getLimitProximity(data[d.key], currentValues[d.key]);
+    const risk = scoreToRisk(scores[d.key], proximity?.percent);
+    return {
+      ...d,
+      index,
+      proximity,
+      risk,
+      status: getRiskLabel(risk),
+      x: Math.min(92, Math.max(8, 18 + risk * 0.7 + index * 2)),
+      y: Math.min(88, Math.max(12, 82 - risk * 0.55 + (index % 2) * 10)),
+    };
+  });
+
+  const scoredRows = riskRows.filter((row) => row.risk > 0);
+  const averageRisk =
+    scoredRows.length > 0
+      ? Math.round(scoredRows.reduce((sum, row) => sum + row.risk, 0) / scoredRows.length)
+      : 0;
+  const topRisk = [...riskRows].sort((a, b) => b.risk - a.risk)[0];
+
+  return (
+    <div className="mt-6 space-y-6 rounded-[8px] bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+            <BarChart3 className="h-4 w-4 text-[#24bf7a]" />
+            Results dashboard
+          </div>
+          <h2 className="mt-2 font-sans text-[32px] font-black tracking-normal text-[#07122f]">
+            Management tracker after scoring
+          </h2>
+          <p className="mt-2 max-w-[760px] text-[14px] font-medium leading-relaxed text-[#697081]">
+            KPIs appear only after the manager adds evidence, scores a dimension, or runs the AI
+            accountability review.
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <ResultPill label="Risk load" value={`${averageRisk}%`} />
+          <ResultPill label="Scored" value={`${scoredRows.length}/5`} />
+          <ResultPill
+            label="AI verdict"
+            value={analysis ? statusMeta[analysis.overallVerdict].label : "Pending"}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-[8px] bg-[#f7f5f4] p-5">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <div>
+              <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                KPI usage bars
+              </div>
+              <p className="mt-1 text-[13px] font-medium text-[#697081]">
+                Used vs available boundary per commitment dimension.
+              </p>
+            </div>
+            {topRisk && (
+              <span className="rounded-[7px] bg-white px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#07122f]">
+                Focus: {topRisk.label}
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            {riskRows.map((row) => {
+              const available = Math.max(0, 100 - Math.min(row.risk, 100));
+              return (
+                <div key={row.key}>
+                  <div className="mb-2 flex items-center justify-between gap-3 text-[12px] font-bold text-[#07122f]">
+                    <span>{row.label}</span>
+                    <span className="text-[#697081]">
+                      {row.risk > 0
+                        ? `${Math.min(row.risk, 100)}% used · ${available}% available`
+                        : "Awaiting score"}
+                    </span>
+                  </div>
+                  <div className="h-4 overflow-hidden rounded-full bg-white">
+                    <div
+                      className={`h-full rounded-full ${getRiskClass(row.risk)}`}
+                      style={{ width: `${Math.min(row.risk, 100)}%` }}
+                    />
+                  </div>
+                  {row.proximity && (
+                    <div className="mt-1 text-[11px] font-medium text-[#697081]">
+                      Numeric read: {row.proximity.label}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="rounded-[8px] bg-[#07122f] p-5 text-white">
+          <div className="mb-5 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-white/55">
+            <Grid2X2 className="h-4 w-4 text-[#24bf7a]" />
+            Attention matrix
+          </div>
+          <div className="relative h-[320px] rounded-[8px] border border-white/15 bg-white/[0.04]">
+            <div className="absolute left-1/2 top-0 h-full w-px bg-white/15" />
+            <div className="absolute left-0 top-1/2 h-px w-full bg-white/15" />
+            <div className="absolute left-4 top-4 text-[11px] font-bold uppercase tracking-[0.1em] text-white/50">
+              Watch closely
+            </div>
+            <div className="absolute bottom-4 left-4 text-[11px] font-bold uppercase tracking-[0.1em] text-white/50">
+              Low drift
+            </div>
+            <div className="absolute right-4 top-4 text-right text-[11px] font-bold uppercase tracking-[0.1em] text-white/50">
+              Sponsor decision
+            </div>
+            <div className="absolute bottom-4 right-4 text-right text-[11px] font-bold uppercase tracking-[0.1em] text-white/50">
+              Monitor
+            </div>
+            {riskRows.map((row) => (
+              <div
+                key={row.key}
+                className="absolute -translate-x-1/2 -translate-y-1/2"
+                style={{ left: `${row.x}%`, top: `${row.y}%` }}
+              >
+                <div
+                  className={`h-4 w-4 rounded-full border-2 border-white ${getRiskClass(row.risk)}`}
+                />
+                <div className="mt-1 whitespace-nowrap rounded-[6px] bg-white px-2 py-1 text-[10px] font-bold text-[#07122f] shadow-sm">
+                  {row.label.split(" ")[0]}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {(["on-track", "watch", "breach"] as Status[]).map((status) => (
+              <div key={status} className="rounded-[8px] bg-white/8 p-3">
+                <div className={`mb-2 h-2 w-2 ${statusMeta[status].dot}`} />
+                <div className="text-[18px] font-black">
+                  {Object.values(scores).filter((score) => score === status).length}
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-white/55">
+                  {statusMeta[status].label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResultPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[8px] bg-[#f7f5f4] px-4 py-3">
+      <div className="text-[20px] font-black leading-none text-[#07122f]">{value}</div>
+      <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
+        {label}
+      </div>
+    </div>
   );
 }
 
