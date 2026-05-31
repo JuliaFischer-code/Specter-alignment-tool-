@@ -255,17 +255,17 @@ function MentorVerdictBlock({ evaluation }: { evaluation: MentorEvaluation }) {
   const verdictConfig = {
     pursue: {
       label: "Pursue",
-      textColor: "text-[#08764c]",
-      borderColor: "border-[#24bf7a]",
-      bgColor: "bg-[#f0fdf6]",
-      dotColor: "bg-[#24bf7a]",
+      textColor: "text-[#22c55e]",
+      borderColor: "border-[#22c55e]",
+      bgColor: "bg-white",
+      dotColor: "bg-[#22c55e]",
     },
     pause: {
       label: "Pause",
-      textColor: "text-amber-600",
-      borderColor: "border-amber-500/40",
-      bgColor: "bg-amber-50/80",
-      dotColor: "bg-amber-500",
+      textColor: "text-[#f97316]",
+      borderColor: "border-[#f97316]",
+      bgColor: "bg-white",
+      dotColor: "bg-[#f97316]",
     },
     drop: {
       label: "Drop",
@@ -278,13 +278,13 @@ function MentorVerdictBlock({ evaluation }: { evaluation: MentorEvaluation }) {
 
   const strengthConfig: Record<string, { label: string; color: string }> = {
     strong: { label: "Strong painkiller", color: "text-primary" },
-    weak: { label: "Feels like a vitamin", color: "text-amber-600" },
+    weak: { label: "Feels like a vitamin", color: "text-[#f97316]" },
     unclear: { label: "Hard to tell", color: "text-muted-foreground" },
   };
 
   const qualityConfig: Record<string, { label: string; color: string }> = {
     sharp: { label: "Sharp and testable", color: "text-primary" },
-    vague: { label: "Too vague to measure", color: "text-amber-600" },
+    vague: { label: "Too vague to measure", color: "text-[#f97316]" },
     "too big": { label: "Too big for one week", color: "text-destructive" },
   };
 
@@ -292,7 +292,7 @@ function MentorVerdictBlock({ evaluation }: { evaluation: MentorEvaluation }) {
   const quality = qualityConfig[evaluation.experimentQuality];
 
   return (
-    <div className={`overflow-hidden rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] ${verdictConfig.bgColor}`}>
+    <div className={`overflow-hidden rounded-[16px] border-[1.5px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] ${verdictConfig.bgColor} ${verdictConfig.borderColor}`}>
       {/* Verdict header */}
       <div className="border-b border-black/5 px-10 py-8">
         <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">Mentor Verdict</div>
@@ -324,7 +324,7 @@ function MentorVerdictBlock({ evaluation }: { evaluation: MentorEvaluation }) {
       {/* Mentor note pull quote */}
       <div className="border-t border-black/5 px-10 py-8">
         <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">Mentor note</div>
-        <div className="rounded-[12px] bg-amber-50 px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
+        <div className="rounded-[12px] bg-[#f9fafb] px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
           <p className="text-[16px] font-medium leading-relaxed text-[#07122f]">
             {evaluation.mentorNote}
           </p>
