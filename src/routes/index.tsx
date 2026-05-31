@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useNavigate } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   FileUp,
   Gauge,
   PlayCircle,
@@ -49,6 +51,8 @@ function Index() {
   );
   const [answers, setAnswers] = useState<CommitmentData>(blankCommitment);
   const [step, setStep] = useState(0);
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [triedEmpty, setTriedEmpty] = useState<Set<number>>(new Set());
   const [missingFromPdf, setMissingFromPdf] = useState<string[]>([]);
   const [pdfUploading, setPdfUploading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
@@ -85,6 +89,9 @@ function Index() {
   }
 
   const next = () => {
+    if (value.trim().length === 0) {
+      setTriedEmpty((prev) => new Set([...prev, step]));
+    }
     if (step < total - 1) setStep(step + 1);
     else finalize(answers);
   };
@@ -126,7 +133,6 @@ function Index() {
         },
       });
 
-      // Merge extracted answers into state (only overwrite if non-empty)
       setAnswers((prev) => {
         const next = { ...prev };
         for (const [rawKey, val] of Object.entries(result.answers)) {
@@ -140,7 +146,6 @@ function Index() {
 
       setMissingFromPdf(result.missing);
 
-      // Jump to first missing question if any, otherwise step 0
       if (result.missing.length > 0) {
         const firstMissingIndex = promptScript.findIndex((p) => result.missing.includes(p.id));
         if (firstMissingIndex >= 0) setStep(firstMissingIndex);
@@ -149,214 +154,276 @@ function Index() {
       setPdfError(err instanceof Error ? err.message : "PDF extraction failed.");
     } finally {
       setPdfUploading(false);
-      // Reset input so same file can be re-uploaded
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
-  const dotColor = (id: string, done: boolean) => {
-    if (done) return "bg-primary"; // green
-    if (missingFromPdf.includes(id)) return "bg-destructive"; // red — AI couldn't find it
-    return "bg-border"; // default grey
+  const dotFill = (i: number, p: (typeof promptScript)[0]) => {
+    if (answers[p.id].trim().length > 0) return "#22c55e";
+    if (missingFromPdf.includes(p.id) || triedEmpty.has(i)) return "#ef4444";
+    return "#d1d5db";
   };
 
   return (
     <AppShell>
       <div className="min-h-screen bg-[#f4f6f9]">
-      <section className="mx-auto max-w-[1340px] px-6 py-8">
-        <div className="relative mb-8">
-        <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_380px]">
-          <div>
-            <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
-              Manager · Step 01 · Commitment studio
-            </div>
-            <h1 className="max-w-[880px] font-sans text-[52px] font-black leading-[0.98] tracking-normal text-white md:text-[72px]">
-              Decide what you can afford to lose
-            </h1>
-            <p className="mt-5 max-w-[720px] text-[16px] leading-relaxed text-white/70">
-              Turn a proposed AI pilot into a concrete commitment: owner, budget ceiling, time-box,
-              kill criteria, and continuation signal.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 self-end">
-            <ManagerHeroMetric label="Coverage" value={`${coverage}%`} />
-            <ManagerHeroMetric label="Questions" value={`${progress}/${total}`} />
-          </div>
-        </div>
-        <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[330px_1fr]">
-          <aside className="space-y-7 px-1">
-            <div>
-              <div className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
-                Question set
+        <section className="mx-auto max-w-[1340px] px-6 py-8">
+          {/* Hero banner */}
+          <div className="relative mb-6">
+            <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_380px]">
+              <div>
+                <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
+                  Manager · Step 01 · Commitment studio
+                </div>
+                <h1 className="max-w-[880px] font-sans text-[52px] font-black leading-[0.98] tracking-normal text-white md:text-[72px]">
+                  Decide what you can afford to lose
+                </h1>
+                <p className="mt-5 max-w-[720px] text-[16px] leading-relaxed text-white/70">
+                  Turn a proposed AI pilot into a concrete commitment: owner, budget ceiling, time-box,
+                  kill criteria, and continuation signal.
+                </p>
               </div>
-              <ol className="space-y-1">
-                {promptScript.map((p, i) => {
-                  const done = answers[p.id].trim().length > 0;
-                  const active = i === step;
-                  return (
-                    <li key={p.id}>
+              <div className="grid grid-cols-2 gap-3 self-end">
+                <ManagerHeroMetric label="Coverage" value={`${coverage}%`} />
+                <ManagerHeroMetric label="Questions" value={`${progress}/${total}`} />
+              </div>
+            </div>
+            <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
+          </div>
+
+          {/* Progress stepper + toggle button */}
+          <div className="mb-2 flex items-center gap-4 px-1">
+            <div className="flex flex-1 items-center">
+              {promptScript.map((p, i) => {
+                const active = i === step;
+                const fill = dotFill(i, p);
+                return (
+                  <Fragment key={p.id}>
+                    {i > 0 && (
+                      <div
+                        className="h-0.5 flex-1"
+                        style={{ backgroundColor: i <= step ? "#22c55e" : "#d1d5db" }}
+                      />
+                    )}
+                    <div className="flex shrink-0 flex-col items-center gap-1">
                       <button
                         onClick={() => setStep(i)}
-                        className={
-                          "group flex w-full items-start gap-3 rounded-[12px] px-4 py-3 text-left text-[13px] font-semibold transition-all " +
-                          (active
-                            ? "bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)] text-[#07122f]"
-                            : "text-[#697081] hover:bg-white/70 hover:text-[#07122f]")
-                        }
+                        aria-label={`Go to question ${i + 1}`}
+                        style={{
+                          width: active ? 14 : 10,
+                          height: active ? 14 : 10,
+                          borderRadius: "50%",
+                          backgroundColor: fill,
+                          boxShadow: active ? `0 0 0 4px ${fill}44` : "none",
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                          display: "block",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          fontFamily: "monospace",
+                          color: "#697081",
+                          lineHeight: 1,
+                        }}
                       >
-                        <span className="w-6 shrink-0 font-mono text-[11px] text-[#08764c]">
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                        <span className="flex-1 leading-snug">{p.question}</span>
-                        <span
-                          className={
-                            "mt-1 h-1.5 w-1.5 shrink-0 rounded-full transition-colors " +
-                            dotColor(p.id, done)
-                          }
-                          aria-hidden
-                        />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ol>
-              <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#e2e5ea]">
-                <div
-                  className="h-full rounded-full bg-[#24bf7a]"
-                  style={{ width: `${coverage}%` }}
-                />
-              </div>
+                        Q{i + 1}
+                      </span>
+                    </div>
+                  </Fragment>
+                );
+              })}
             </div>
+            <button
+              onClick={() => setShowAllQuestions((v) => !v)}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] px-3 py-2 text-[12px] font-bold text-[#697081] transition-colors hover:bg-white hover:text-[#07122f]"
+            >
+              {showAllQuestions ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+              {showAllQuestions ? "Hide questions" : "Show all questions"}
+            </button>
+          </div>
 
-            <ManagerReadinessPanel
-              coverage={coverage}
-              readiness={readiness}
-              missingCount={missingFromPdf.length}
-              pdfFileName={pdfFileName}
-            />
-          </aside>
-
-          <div className="space-y-5">
-            <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          {/* Collapsible question overview panel */}
+          <div
+            style={{
+              maxHeight: showAllQuestions ? "720px" : "0",
+              overflow: "hidden",
+              transition: "max-height 0.3s ease",
+            }}
+          >
+            <div className="mb-6 rounded-[16px] bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.10)]">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-[1fr_300px]">
                 <div>
-                  <div className="mb-1 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
-                    <FileUp className="h-4 w-4 text-[#24bf7a]" />
-                    Import from document
+                  <div className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                    Question set
                   </div>
-                  <p className="text-[13px] font-medium text-[#697081]">
-                    Upload a PDF and we'll pre-fill what we can find. Missing answers will be
-                    flagged in red.
-                  </p>
+                  <ol className="space-y-1">
+                    {promptScript.map((p, i) => {
+                      const active = i === step;
+                      return (
+                        <li key={p.id}>
+                          <button
+                            onClick={() => {
+                              setStep(i);
+                              setShowAllQuestions(false);
+                            }}
+                            className={
+                              "group flex w-full items-start gap-3 rounded-[12px] px-4 py-3 text-left text-[13px] font-semibold transition-all " +
+                              (active
+                                ? "bg-[#f4f6f9] text-[#07122f]"
+                                : "text-[#697081] hover:bg-[#f4f6f9] hover:text-[#07122f]")
+                            }
+                          >
+                            <span className="w-6 shrink-0 font-mono text-[11px] text-[#08764c]">
+                              {String(i + 1).padStart(2, "0")}
+                            </span>
+                            <span className="flex-1 leading-snug">{p.question}</span>
+                            <span
+                              className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full transition-colors"
+                              style={{ backgroundColor: dotFill(i, p) }}
+                              aria-hidden
+                            />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ol>
                 </div>
-                <div className="shrink-0">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf"
-                    onChange={handlePdfUpload}
-                    className="hidden"
-                    id="pdf-upload"
+                <div className="border-t pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-0">
+                  <ManagerReadinessPanel
+                    coverage={coverage}
+                    readiness={readiness}
+                    missingCount={missingFromPdf.length}
+                    pdfFileName={pdfFileName}
                   />
-                  <label
-                    htmlFor="pdf-upload"
-                    className={
-                      "inline-flex cursor-pointer items-center gap-2 rounded-[12px] px-4 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] transition-colors " +
-                      (pdfUploading
-                        ? "pointer-events-none bg-[#f4f2f3] text-[#697081] opacity-50"
-                        : "bg-[#07122f] text-white hover:bg-[#12204a]")
-                    }
-                  >
-                    <FileUp className="h-4 w-4" />
-                    {pdfUploading ? "Extracting…" : "Upload PDF"}
-                  </label>
                 </div>
               </div>
-
-              {pdfFileName && !pdfUploading && !pdfError && (
-                <div className="mt-4 flex flex-wrap items-center gap-2 text-[12px] font-medium text-[#697081]">
-                  <span className="h-2 w-2 rounded-full bg-[#24bf7a]" />
-                  <span>{pdfFileName} imported</span>
-                  {missingFromPdf.length > 0 && (
-                    <span className="font-semibold text-red-600">
-                      · {missingFromPdf.length} question{missingFromPdf.length > 1 ? "s" : ""} not
-                      found in document
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {pdfError && (
-                <p className="mt-3 text-[12px] font-semibold text-red-600">{pdfError}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_320px]">
-              <div className="rounded-[16px] bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-[#08764c]">
-                    Question {String(step + 1).padStart(2, "0")} / {total}
-                  </span>
-                  <button
-                    onClick={loadSample}
-                    className="inline-flex items-center gap-2 rounded-[12px] bg-[#f4f6f9] px-3 py-2 text-[12px] font-bold text-[#07122f] hover:bg-[#dff5eb]"
-                  >
-                    <Sparkles className="h-4 w-4 text-[#24bf7a]" />
-                    Load worked example
-                  </button>
-                </div>
-
-                <h2 className="mt-6 font-sans text-[36px] font-black leading-[1.05] tracking-normal text-[#07122f]">
-                  {current.question}
-                </h2>
-                <p className="mt-3 text-[14px] font-medium text-[#697081]">{current.hint}</p>
-
-                <textarea
-                  value={value}
-                  onChange={(e) => update(e.target.value)}
-                  placeholder={current.placeholder}
-                  rows={7}
-                  className="mt-8 w-full resize-none rounded-[12px] border border-[#e4e0de] bg-[#f4f6f9] p-4 text-[15px] font-medium leading-relaxed text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
-                  autoFocus
-                />
-
-                <div className="mt-8 flex items-center justify-between">
-                  <button
-                    onClick={() => setStep(Math.max(0, step - 1))}
-                    disabled={step === 0}
-                    className="text-[13px] font-bold text-[#697081] transition-colors hover:text-[#07122f] disabled:opacity-30"
-                  >
-                    ← Previous
-                  </button>
-                  <div className="flex items-center gap-3">
-                    {step < total - 1 ? (
-                      <button
-                        onClick={next}
-                        className="inline-flex items-center gap-2 rounded-[12px] bg-[#07122f] px-6 py-3 text-[13px] font-bold tracking-wide text-white transition-transform hover:-translate-y-0.5"
-                      >
-                        Next question <ArrowRight className="h-4 w-4" />
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => finalize(answers)}
-                        className="inline-flex items-center gap-2 rounded-[12px] bg-[#24bf7a] px-6 py-3 text-[13px] font-bold tracking-wide text-[#07122f] transition-transform hover:-translate-y-0.5"
-                      >
-                        Generate commitment document <ArrowRight className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <CommitmentPreview answers={answers} readiness={readiness} />
             </div>
           </div>
-        </div>
-      </section>
+
+          {/* PDF upload bar */}
+          <div className="mb-5 rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="mb-1 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                  <FileUp className="h-4 w-4 text-[#24bf7a]" />
+                  Import from document
+                </div>
+                <p className="text-[13px] font-medium text-[#697081]">
+                  Upload a PDF and we'll pre-fill what we can find. Missing answers will be flagged
+                  in red.
+                </p>
+              </div>
+              <div className="shrink-0">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf"
+                  onChange={handlePdfUpload}
+                  className="hidden"
+                  id="pdf-upload"
+                />
+                <label
+                  htmlFor="pdf-upload"
+                  className={
+                    "inline-flex cursor-pointer items-center gap-2 rounded-[12px] px-4 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] transition-colors " +
+                    (pdfUploading
+                      ? "pointer-events-none bg-[#f4f2f3] text-[#697081] opacity-50"
+                      : "bg-[#07122f] text-white hover:bg-[#12204a]")
+                  }
+                >
+                  <FileUp className="h-4 w-4" />
+                  {pdfUploading ? "Extracting…" : "Upload PDF"}
+                </label>
+              </div>
+            </div>
+
+            {pdfFileName && !pdfUploading && !pdfError && (
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-[12px] font-medium text-[#697081]">
+                <span className="h-2 w-2 rounded-full bg-[#24bf7a]" />
+                <span>{pdfFileName} imported</span>
+                {missingFromPdf.length > 0 && (
+                  <span className="font-semibold text-red-600">
+                    · {missingFromPdf.length} question{missingFromPdf.length > 1 ? "s" : ""} not
+                    found in document
+                  </span>
+                )}
+              </div>
+            )}
+
+            {pdfError && (
+              <p className="mt-3 text-[12px] font-semibold text-red-600">{pdfError}</p>
+            )}
+          </div>
+
+          {/* Two-column main layout */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[65%_1fr]">
+            {/* Main question card */}
+            <div className="rounded-[16px] bg-white p-10 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-[#08764c]">
+                  Question {String(step + 1).padStart(2, "0")} / {total}
+                </span>
+                <button
+                  onClick={loadSample}
+                  className="inline-flex items-center gap-2 rounded-[12px] bg-[#f4f6f9] px-3 py-2 text-[12px] font-bold text-[#07122f] hover:bg-[#dff5eb]"
+                >
+                  <Sparkles className="h-4 w-4 text-[#24bf7a]" />
+                  Load worked example
+                </button>
+              </div>
+
+              <h2 className="mt-6 font-sans text-[36px] font-black leading-[1.05] tracking-normal text-[#07122f]">
+                {current.question}
+              </h2>
+              <p className="mt-3 text-[14px] font-medium text-[#697081]">{current.hint}</p>
+
+              <textarea
+                value={value}
+                onChange={(e) => update(e.target.value)}
+                placeholder={current.placeholder}
+                rows={10}
+                className="mt-8 w-full resize-none rounded-[12px] border border-[#e4e0de] bg-[#f4f6f9] p-4 text-[15px] font-medium leading-relaxed text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
+                autoFocus
+              />
+
+              <div className="mt-8 flex items-center justify-between">
+                <button
+                  onClick={() => setStep(Math.max(0, step - 1))}
+                  disabled={step === 0}
+                  className="text-[13px] font-bold text-[#697081] transition-colors hover:text-[#07122f] disabled:opacity-30"
+                >
+                  ← Previous
+                </button>
+                <div className="flex items-center gap-3">
+                  {step < total - 1 ? (
+                    <button
+                      onClick={next}
+                      className="inline-flex items-center gap-2 rounded-[12px] bg-[#07122f] px-6 py-3 text-[13px] font-bold tracking-wide text-white transition-transform hover:-translate-y-0.5"
+                    >
+                      Next question <ArrowRight className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => finalize(answers)}
+                      className="inline-flex items-center gap-2 rounded-[12px] bg-[#24bf7a] px-6 py-3 text-[13px] font-bold tracking-wide text-[#07122f] transition-transform hover:-translate-y-0.5"
+                    >
+                      Generate commitment document <ArrowRight className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <CommitmentPreview answers={answers} readiness={readiness} />
+          </div>
+        </section>
       </div>
     </AppShell>
   );
@@ -425,7 +492,6 @@ function SpecterLanding({
     >
       <style>{BH_CSS}</style>
 
-      {/* Perspective grid — animated in phases 1 & 2, static+dimmed in phase 3 */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
         <div style={{
           position: 'absolute', inset: '-60%',
@@ -440,7 +506,6 @@ function SpecterLanding({
         }} />
       </div>
 
-      {/* Orbital rings — phases 1 & 2 only */}
       {!isSelecting && (
         <svg
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', pointerEvents: 'none' }}
@@ -462,7 +527,6 @@ function SpecterLanding({
         </svg>
       )}
 
-      {/* Expanding overlay — only during click transition */}
       {isCollapsing && (
         <div style={{
           position: 'absolute', left: '50%', top: '50%',
@@ -472,7 +536,6 @@ function SpecterLanding({
         }} />
       )}
 
-      {/* Title / logo — phases 1 & 2 */}
       {!isSelecting && (
         <div style={{
           position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none',
@@ -498,7 +561,6 @@ function SpecterLanding({
         </div>
       )}
 
-      {/* Click prompt — idle only */}
       {isIdle && (
         <p style={{
           position: 'absolute', bottom: '7%', left: 0, right: 0,
@@ -511,7 +573,6 @@ function SpecterLanding({
         </p>
       )}
 
-      {/* Mode selection — phase 3 */}
       {isSelecting && (
         <div style={{
           position: 'absolute', left: '50%', top: '50%',
@@ -656,8 +717,8 @@ function ManagerReadinessPanel({
   ];
 
   return (
-    <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-      <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+    <div>
+      <div className="mb-3 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
         <Gauge className="h-4 w-4 text-[#24bf7a]" />
         Commitment readiness
       </div>
@@ -670,7 +731,7 @@ function ManagerReadinessPanel({
           <div className="h-full rounded-full bg-[#24bf7a]" style={{ width: `${readiness}%` }} />
         </div>
       </div>
-      <div className="mt-5 space-y-3">
+      <div className="mt-4 space-y-2">
         {checks.map((check) => {
           const Icon = check.icon;
           return (
@@ -678,7 +739,9 @@ function ManagerReadinessPanel({
               key={check.label}
               className={
                 "flex items-center gap-3 rounded-[10px] px-3 py-2 text-[13px] font-semibold " +
-                (check.active ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.07)] text-[#07122f]" : "text-[#697081]")
+                (check.active
+                  ? "bg-[#f4f6f9] text-[#07122f]"
+                  : "text-[#697081]")
               }
             >
               <Icon className={check.active ? "h-4 w-4 text-[#24bf7a]" : "h-4 w-4"} />
@@ -687,7 +750,7 @@ function ManagerReadinessPanel({
           );
         })}
       </div>
-      <div className="mt-5 text-[12px] font-medium text-[#697081]">
+      <div className="mt-4 text-[12px] font-medium text-[#697081]">
         {pdfFileName ? `Imported: ${pdfFileName}` : "Manual entry or PDF import"} · {missingCount}{" "}
         missing
       </div>
