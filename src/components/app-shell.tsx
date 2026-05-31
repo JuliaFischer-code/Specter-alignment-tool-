@@ -40,33 +40,7 @@ export function AppShell({
             </span>
           </Link>
           <nav className="flex items-center gap-1">
-            {/* Mode toggle */}
-            <div className="mr-4 flex items-center rounded-sm border border-border p-0.5">
-              <button
-                onClick={() => { setMode("manager"); navigate({ to: "/" }); }}
-                className={
-                  "px-3 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors " +
-                  (mode === "manager"
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground")
-                }
-              >
-                Manager
-              </button>
-              <button
-                onClick={() => { setMode("team"); navigate({ to: "/team" }); }}
-                className={
-                  "px-3 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors " +
-                  (mode === "team"
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground")
-                }
-              >
-                Team
-              </button>
-            </div>
-
-            {/* Context nav */}
+            {/* Context nav — always 3 slots to prevent layout shift */}
             {nav.map((item) => {
               const active = pathname === item.to;
               return (
@@ -88,9 +62,46 @@ export function AppShell({
                 </Link>
               );
             })}
+            {mode === "team" && (
+              <span
+                aria-hidden
+                className="invisible pointer-events-none px-4 py-2 text-[13px]"
+              >
+                <span className="number-tag mr-2">03</span>
+                Check-in
+              </span>
+            )}
           </nav>
         </div>
       </header>
+      <div className="pt-16 pb-0">
+        <div className="mx-auto max-w-[1240px] px-8">
+        <div className="flex items-center rounded-sm border border-border p-0.5 w-fit">
+          <button
+            onClick={() => { setMode("manager"); navigate({ to: "/" }); }}
+            className={
+              "w-24 py-1 text-center font-mono text-[11px] uppercase tracking-wider transition-colors " +
+              (mode === "manager"
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground")
+            }
+          >
+            Manager
+          </button>
+          <button
+            onClick={() => { setMode("team"); navigate({ to: "/team" }); }}
+            className={
+              "w-24 py-1 text-center font-mono text-[11px] uppercase tracking-wider transition-colors " +
+              (mode === "team"
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground")
+            }
+          >
+            Team
+          </button>
+        </div>
+        </div>
+      </div>
       <main>{children}</main>
       <footer className="mt-24 border-t border-border">
         <div className="mx-auto flex max-w-[1240px] items-center justify-between px-8 py-6 text-[12px] text-muted-foreground">
@@ -114,7 +125,7 @@ export function PageHeader({
   teamStyle?: boolean;
 }) {
   return (
-    <div className="mx-auto max-w-[1240px] px-8 pt-16 pb-10">
+    <div className="mx-auto max-w-[1240px] px-8 pt-6 pb-10">
       <div className="eyebrow">{eyebrow}</div>
       <h1 className={`mt-4 max-w-3xl font-serif text-[56px] leading-[1.02] ${teamStyle ? "tracking-wide" : ""}`}>
         {title}

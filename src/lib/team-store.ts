@@ -46,7 +46,7 @@ export const blankPendingIdea: PendingIdea = {
 const PENDING_KEY = "uncertainty-navigator/team-pending-v1";
 const PENDING_EVAL_KEY = "uncertainty-navigator/team-pending-eval-v1";
 const IDEAS_KEY = "uncertainty-navigator/team-ideas-v1";
-const SEEDED_KEY = "uncertainty-navigator/team-seeded-v2";
+const SEEDED_KEY = "uncertainty-navigator/team-seeded-v3";
 
 export const MOCK_IDEAS: IdeaCard[] = [
   {
@@ -85,6 +85,160 @@ export const MOCK_IDEAS: IdeaCard[] = [
       biggestBlindspot:
         "Suppression logic may hide cascading failures that look like noise at first.",
       mentorNote: "This is the right shape of experiment. You've named the risk. Run it.",
+    },
+  },
+  {
+    id: "mock-2",
+    author: "Jonas W., Site Reliability Engineer",
+    problem:
+      "Our monitoring dashboards have so many metrics that engineers ignore them entirely",
+    whoHasIt: "SRE team",
+    experiment:
+      "Hide all metrics below a relevance threshold for one week and see if incident response improves",
+    willingToRisk:
+      "Risk of missing a metric that matters — I'll stay on-call myself that week",
+    goSignal: "Mean time to detect incidents drops by 30%",
+    stopSignal: "Any incident where a hidden metric was the first signal",
+    status: "On track · Week 1",
+    checkIns: [
+      {
+        id: "mock-2-ci-1",
+        createdAt: "2026-05-24T09:00:00Z",
+        learning:
+          "Engineers are already commenting that dashboards feel less overwhelming. No incidents yet this week.",
+        decision: "continue",
+      },
+    ],
+    createdAt: "2026-05-17T08:00:00Z",
+    mentorEvaluation: {
+      verdict: "pursue",
+      verdictReason: "Strong signal problem with clear metrics.",
+      problemStrength: "strong",
+      experimentQuality: "sharp",
+      biggestBlindspot:
+        "Relevance thresholds may be miscalibrated for rare but critical events.",
+      mentorNote: "Bold call to hide metrics. The stop signal is unambiguous. Run it.",
+    },
+  },
+  {
+    id: "mock-3",
+    author: "Priya S., Frontend Engineer",
+    problem:
+      "Design handoffs create a week of back-and-forth between design and engineering on every feature",
+    whoHasIt: "Frontend engineers and designers",
+    experiment:
+      "Use an AI tool to auto-generate component specs from Figma files for one sprint",
+    willingToRisk: "One sprint's worth of slower delivery if it doesn't work",
+    goSignal: "Handoff time drops from 5 days to 1 day",
+    stopSignal:
+      "Engineers spend more time fixing AI output than reading design files",
+    status: "Watch · Week 3",
+    checkIns: [
+      {
+        id: "mock-3-ci-1",
+        createdAt: "2026-05-10T09:00:00Z",
+        learning:
+          "AI-generated specs are 60% accurate. Still requires significant manual correction.",
+        decision: "continue",
+      },
+      {
+        id: "mock-3-ci-2",
+        createdAt: "2026-05-17T09:00:00Z",
+        learning:
+          "Accuracy improved to 70% after prompt tuning but engineers spending 3+ hours fixing output.",
+        decision: "pause",
+      },
+      {
+        id: "mock-3-ci-3",
+        createdAt: "2026-05-24T09:00:00Z",
+        learning:
+          "Paused to rethink approach. The tool works better for simple components than complex ones.",
+        decision: "pause",
+      },
+    ],
+    createdAt: "2026-05-03T08:00:00Z",
+    mentorEvaluation: {
+      verdict: "pause",
+      verdictReason: "Problem is real but experiment needs sharper scope.",
+      problemStrength: "strong",
+      experimentQuality: "vague",
+      biggestBlindspot:
+        "AI accuracy varies widely by component complexity — one sprint may not reveal the full picture.",
+      mentorNote:
+        "Narrow the experiment to a specific component type before drawing conclusions.",
+    },
+  },
+  {
+    id: "mock-4",
+    author: "Tom R., Data Engineer",
+    problem:
+      "Data pipeline failures are only discovered by downstream teams hours after they happen",
+    whoHasIt: "Data consumers across the org",
+    experiment:
+      "Add a simple anomaly detector that pings the data team Slack channel immediately on failure",
+    willingToRisk: "A weekend to build it",
+    goSignal: "Detection time drops from 4 hours to under 10 minutes",
+    stopSignal: "More than 5 false positive alerts per day",
+    status: "On track · Week 2",
+    checkIns: [
+      {
+        id: "mock-4-ci-1",
+        createdAt: "2026-05-17T09:00:00Z",
+        learning:
+          "Detector built and deployed. Two real failures caught within 8 minutes each. Zero false positives so far.",
+        decision: "continue",
+      },
+      {
+        id: "mock-4-ci-2",
+        createdAt: "2026-05-24T09:00:00Z",
+        learning:
+          "Detection time averaging 6 minutes. One false positive triggered by a planned maintenance window.",
+        decision: "continue",
+      },
+    ],
+    createdAt: "2026-05-10T08:00:00Z",
+    mentorEvaluation: {
+      verdict: "pursue",
+      verdictReason: "Fast feedback loop with measurable outcome.",
+      problemStrength: "strong",
+      experimentQuality: "sharp",
+      biggestBlindspot:
+        "Slack pings can get ignored in noisy channels — consider a dedicated alert channel.",
+      mentorNote:
+        "This is a weekend build that could save hours weekly. Strong ROI. Keep going.",
+    },
+  },
+  {
+    id: "mock-5",
+    author: "Anna L., Mobile Engineer",
+    problem:
+      "App crash reports are so verbose that engineers spend 2 hours triaging before finding the root cause",
+    whoHasIt: "Mobile engineers on call",
+    experiment:
+      "Use an LLM to summarize crash reports into 3-line root cause hypotheses for one week",
+    willingToRisk: "My evenings this week",
+    goSignal: "Triage time drops from 2 hours to under 20 minutes",
+    stopSignal: "LLM summary is wrong on more than 30% of crashes",
+    status: "On track · Week 1",
+    checkIns: [
+      {
+        id: "mock-5-ci-1",
+        createdAt: "2026-05-24T09:00:00Z",
+        learning:
+          "LLM summaries are surprisingly accurate. 4 out of 5 crashes summarized correctly. Triage time down to 35 minutes average.",
+        decision: "continue",
+      },
+    ],
+    createdAt: "2026-05-17T08:00:00Z",
+    mentorEvaluation: {
+      verdict: "pursue",
+      verdictReason: "High leverage if accuracy holds.",
+      problemStrength: "strong",
+      experimentQuality: "sharp",
+      biggestBlindspot:
+        "LLM may hallucinate for novel crash patterns it hasn't seen before.",
+      mentorNote:
+        "Track accuracy rigorously. If you hit 80%+ correct summaries, this is worth productizing.",
     },
   },
 ];

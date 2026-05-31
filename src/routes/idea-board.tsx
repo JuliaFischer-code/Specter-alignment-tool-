@@ -25,9 +25,14 @@ export const Route = createFileRoute("/idea-board")({
   component: IdeaBoardPage,
 });
 
+// IDs of the pre-computed similar pair
+const SIMILAR_IDS = new Set(["mock-1", "mock-2"]);
+
 function IdeaBoardPage() {
   const { ideas, hydrated, addCheckIn } = useIdeas();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"all" | "matches">("all");
+  const [toastVisible, setToastVisible] = useState(false);
 
   if (!hydrated) {
     return (
@@ -39,6 +44,11 @@ function IdeaBoardPage() {
     );
   }
 
+  const showToast = () => {
+    setToastVisible(true);
+    setTimeout(() => setToastVisible(false), 3000);
+  };
+
   return (
     <AppShell teamMode>
       <PageHeader
@@ -49,59 +59,209 @@ function IdeaBoardPage() {
       />
 
       <section className="mx-auto max-w-[1240px] px-8">
-        {ideas.length === 0 ? (
-          <div className="py-16 text-center text-muted-foreground">
-            <p>No experiments yet.</p>
-            <Link
-              to="/team"
-              className="mt-4 inline-block text-[13px] text-foreground underline underline-offset-4"
-            >
-              Start the first one →
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {ideas.map((idea) => (
-              <IdeaRow
-                key={idea.id}
-                idea={idea}
-                expanded={expandedId === idea.id}
-                onToggle={() =>
-                  setExpandedId(expandedId === idea.id ? null : idea.id)
-                }
-                onCheckIn={(checkIn, newStatus) =>
-                  addCheckIn(idea.id, checkIn, newStatus)
-                }
-              />
-            ))}
-          </div>
-        )}
-
-        <div className="mt-12 flex items-center justify-between border-t border-border pt-6">
-          <span className="text-[12px] text-muted-foreground">
-            {ideas.length} experiment{ideas.length !== 1 ? "s" : ""} on the board
-          </span>
-          <Link
-            to="/team"
-            className="bg-primary px-5 py-2.5 text-[13px] font-medium tracking-wide text-primary-foreground transition-opacity hover:opacity-90"
+        {/* Tabs */}
+        <div className="mb-8 flex gap-0 border-b border-border">
+          <TabButton active={activeTab === "all"} onClick={() => setActiveTab("all")}>
+            All experiments
+          </TabButton>
+          <TabButton
+            active={activeTab === "matches"}
+            onClick={() => setActiveTab("matches")}
           >
-            + Add experiment
-          </Link>
+            Idea Matches
+            <span className="ml-2 inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-400/30 font-mono text-[10px] text-amber-700">
+              1
+            </span>
+          </TabButton>
         </div>
+
+        {activeTab === "all" ? (
+          <>
+            {ideas.length === 0 ? (
+              <div className="py-16 text-center text-muted-foreground">
+                <p>No experiments yet.</p>
+                <Link
+                  to="/team"
+                  className="mt-4 inline-block text-[13px] text-foreground underline underline-offset-4"
+                >
+                  Start the first one →
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {ideas.map((idea) => (
+                  <IdeaRow
+                    key={idea.id}
+                    idea={idea}
+                    hasSimilar={SIMILAR_IDS.has(idea.id)}
+                    expanded={expandedId === idea.id}
+                    onToggle={() =>
+                      setExpandedId(expandedId === idea.id ? null : idea.id)
+                    }
+                    onCheckIn={(checkIn, newStatus) =>
+                      addCheckIn(idea.id, checkIn, newStatus)
+                    }
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="mt-12 flex items-center justify-between border-t border-border pt-6">
+              <span className="text-[12px] text-muted-foreground">
+                {ideas.length} experiment{ideas.length !== 1 ? "s" : ""} on the board
+              </span>
+              <Link
+                to="/team"
+                className="bg-primary px-5 py-2.5 text-[13px] font-medium tracking-wide text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                + Add experiment
+              </Link>
+            </div>
+          </>
+        ) : (
+          <IdeaMatchesTab ideas={ideas} onConnect={showToast} />
+        )}
       </section>
 
       <div className="h-24" />
+
+      {/* Toast */}
+      {toastVisible && (
+        <div className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 border border-border bg-card px-6 py-3 text-[13px] text-foreground shadow-lg">
+          Feature coming soon: team introductions
+        </div>
+      )}
     </AppShell>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={
+        "flex items-center gap-1 px-5 py-3 font-mono text-[11px] uppercase tracking-wider transition-colors " +
+        (active
+          ? "border-b-2 border-foreground text-foreground"
+          : "border-b-2 border-transparent text-muted-foreground hover:text-foreground")
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
+function IdeaMatchesTab({
+  ideas,
+  onConnect,
+}: {
+  ideas: IdeaCard[];
+  onConnect: () => void;
+}) {
+  const lena = ideas.find((i) => i.id === "mock-1");
+  const jonas = ideas.find((i) => i.id === "mock-2");
+
+  if (!lena || !jonas) {
+    return (
+      <div className="py-16 text-center text-muted-foreground">
+        <p>No matches detected yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <p className="text-[12px] text-muted-foreground">
+        1 potential collaboration detected across active experiments.
+      </p>
+
+      {/* Match card */}
+      <div className="border border-dashed border-amber-400/60 bg-amber-50/30">
+        {/* Header */}
+        <div className="flex items-center gap-3 border-b border-amber-400/30 px-8 py-4">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden />
+          <span className="font-mono text-[11px] uppercase tracking-wider text-amber-700">
+            Potential collaboration found
+          </span>
+        </div>
+
+        {/* Two ideas side by side */}
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr]">
+          <MatchIdeaSummary idea={lena} />
+
+          {/* Center connector */}
+          <div className="flex flex-col items-center justify-center gap-2 px-6 py-8 md:border-x md:border-amber-400/20">
+            <div className="hidden h-px w-8 bg-amber-400/40 md:block" />
+            <span className="max-w-[120px] text-center font-mono text-[10px] uppercase tracking-wider text-amber-600">
+              Both tackling signal-to-noise in engineering ops
+            </span>
+            <div className="hidden h-px w-8 bg-amber-400/40 md:block" />
+          </div>
+
+          <MatchIdeaSummary idea={jonas} />
+        </div>
+
+        {/* AI insight block */}
+        <div className="border-t border-amber-400/30 bg-amber-50/40 px-8 py-5">
+          <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-amber-700">
+            AI insight
+          </div>
+          <p className="text-[13px] leading-relaxed text-foreground">
+            These experiments are testing the same hypothesis from different angles — alert
+            noise vs. metric noise. Running them in parallel risks duplication. Consider:
+            one team owns the problem, the other contributes findings. Suggested owner:
+            whoever has more on-call exposure.
+          </p>
+        </div>
+
+        {/* Action row */}
+        <div className="border-t border-amber-400/30 px-8 py-5">
+          <button
+            onClick={onConnect}
+            className="border border-amber-500/60 bg-amber-400/10 px-5 py-2.5 font-mono text-[11px] uppercase tracking-wider text-amber-700 transition-colors hover:bg-amber-400/20"
+          >
+            Connect these teams →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MatchIdeaSummary({ idea }: { idea: IdeaCard }) {
+  return (
+    <div className="px-8 py-6">
+      <p className="mb-1 text-[11px] text-muted-foreground">{idea.author}</p>
+      <p className="mb-3 text-[14px] font-medium leading-snug text-foreground">
+        {idea.problem}
+      </p>
+      <p className="text-[12px] leading-relaxed text-muted-foreground">
+        <span className="font-mono text-[10px] uppercase tracking-wider text-foreground/60">
+          Experiment:{" "}
+        </span>
+        {idea.experiment}
+      </p>
+    </div>
   );
 }
 
 function IdeaRow({
   idea,
+  hasSimilar,
   expanded,
   onToggle,
   onCheckIn,
 }: {
   idea: IdeaCard;
+  hasSimilar: boolean;
   expanded: boolean;
   onToggle: () => void;
   onCheckIn: (checkIn: TeamCheckIn, newStatus: string) => void;
@@ -129,6 +289,11 @@ function IdeaRow({
             <span className="text-[11px] text-muted-foreground">
               · {idea.checkIns.length} check-in{idea.checkIns.length !== 1 ? "s" : ""}
             </span>
+            {hasSimilar && (
+              <span className="font-mono text-[10px] text-amber-600">
+                · Similar idea on board
+              </span>
+            )}
             {idea.mentorEvaluation && (
               <VerdictBadge verdict={idea.mentorEvaluation.verdict} />
             )}
