@@ -26,7 +26,7 @@ import { downloadManagerBriefPdf } from "@/lib/manager-brief-pdf";
 export const Route = createFileRoute("/idea-board")({
   head: () => ({
     meta: [
-      { title: "Idea Board — Uncertainty Navigator" },
+      { title: "Idea Board — Specter" },
       {
         name: "description",
         content: "Active experiments from the team.",
@@ -151,12 +151,14 @@ function IdeaBoardSidebar({ ideas }: { ideas: IdeaCard[] }) {
   return (
     <aside className="h-fit rounded-[8px] bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.10)] lg:sticky lg:top-8">
       <div className="mb-5 flex items-center gap-4 lg:mb-8">
-        <div className="flex h-14 w-14 items-center justify-center rounded-[8px] bg-[#24bf7a] text-[24px] font-bold text-[#07122f]">
-          A
-        </div>
+        <SpecterWorkspaceMark />
         <div>
-          <div className="text-[20px] font-bold tracking-[-0.01em] text-[#07122f]">Affirm</div>
-          <div className="text-[12px] font-medium text-[#8d93a1]">Anchor Align</div>
+          <div className="font-serif text-[24px] font-bold tracking-normal text-[#07122f]">
+            Specter
+          </div>
+          <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#24bf7a]">
+            Know where the line is
+          </div>
         </div>
       </div>
 
@@ -209,6 +211,42 @@ function SidebarMetric({ label, value }: { label: string; value: number | string
     <div>
       <div className="text-[22px] font-bold leading-none text-white">{value}</div>
       <div className="mt-1 text-[11px] font-medium text-white/55">{label}</div>
+    </div>
+  );
+}
+
+function SpecterWorkspaceMark() {
+  return (
+    <div className="flex h-14 w-14 items-center justify-center rounded-[8px] bg-[#07122f]">
+      <svg viewBox="0 0 64 64" className="h-11 w-11" role="img" aria-label="Specter logo">
+        <circle cx="32" cy="32" r="25" fill="none" stroke="#17345d" strokeWidth="1.5" />
+        <circle cx="32" cy="32" r="16" fill="none" stroke="#24bf7a" strokeWidth="3" />
+        <circle cx="32" cy="32" r="7" fill="none" stroke="#24bf7a" strokeWidth="3" />
+        <ellipse
+          cx="32"
+          cy="32"
+          rx="29"
+          ry="11"
+          fill="none"
+          stroke="#24bf7a"
+          strokeWidth="2"
+          transform="rotate(-16 32 32)"
+        />
+        <ellipse
+          cx="32"
+          cy="32"
+          rx="28"
+          ry="17"
+          fill="none"
+          stroke="#17345d"
+          strokeOpacity="0.85"
+          strokeWidth="1.5"
+          transform="rotate(24 32 32)"
+        />
+        <line x1="11" y1="32" x2="53" y2="32" stroke="#24bf7a" strokeWidth="2" />
+        <line x1="32" y1="11" x2="32" y2="53" stroke="#24bf7a" strokeWidth="2" />
+        <circle cx="32" cy="32" r="3" fill="#24bf7a" />
+      </svg>
     </div>
   );
 }

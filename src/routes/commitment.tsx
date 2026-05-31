@@ -6,7 +6,7 @@ import { type CommitmentData, useCheckIns, useCommitment } from "@/lib/commitmen
 export const Route = createFileRoute("/commitment")({
   head: () => ({
     meta: [
-      { title: "Commitment Document — Uncertainty Navigator" },
+      { title: "Commitment Document — Specter" },
       {
         name: "description",
         content: "The signed commitment generated from your affordable-loss conversation.",

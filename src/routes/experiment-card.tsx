@@ -15,7 +15,7 @@ import { evaluateIdea } from "@/lib/idea-evaluator.functions";
 export const Route = createFileRoute("/experiment-card")({
   head: () => ({
     meta: [
-      { title: "Experiment Card — Uncertainty Navigator" },
+      { title: "Experiment Card — Specter" },
       {
         name: "description",
         content: "Your one-week bet, written down before you start.",
@@ -51,7 +51,7 @@ function ExperimentCardPage() {
         setEvaluation(result);
       })
       .finally(() => setEvaluating(false));
-  }, [hydrated, data?.problem]);
+  }, [hydrated, data]);
 
   useEffect(() => {
     if (evaluation?.verdict === "pursue" && !confettiFired.current) {
@@ -139,16 +139,14 @@ function ExperimentCardPage() {
             {evaluation && <MentorVerdictBlock evaluation={evaluation} />}
 
             {/* Card */}
-            <div className={`border border-dashed border-border bg-card ${evaluation ? "mt-10" : ""}`}>
+            <div
+              className={`border border-dashed border-border bg-card ${evaluation ? "mt-10" : ""}`}
+            >
               {/* Card header */}
               <div className="border-b border-border px-10 py-8">
                 <div className="eyebrow mb-2">Experiment Card</div>
-                <p className="font-serif text-[28px] leading-snug">
-                  {data.problem}
-                </p>
-                <p className="mt-2 text-[14px] text-muted-foreground">
-                  Affects: {data.whoHasIt}
-                </p>
+                <p className="font-serif text-[28px] leading-snug">{data.problem}</p>
+                <p className="mt-2 text-[14px] text-muted-foreground">Affects: {data.whoHasIt}</p>
               </div>
 
               {/* Card body */}
@@ -287,9 +285,7 @@ function MentorVerdictBlock({ evaluation }: { evaluation: MentorEvaluation }) {
       <div className="border-b border-border/50 px-10 py-8">
         <div className="eyebrow mb-4">Mentor Verdict</div>
         <div className="flex items-baseline gap-4">
-          <span
-            className={`font-serif text-[52px] leading-none ${verdictConfig.textColor}`}
-          >
+          <span className={`font-serif text-[52px] leading-none ${verdictConfig.textColor}`}>
             {verdictConfig.label}
           </span>
           <span
@@ -304,16 +300,8 @@ function MentorVerdictBlock({ evaluation }: { evaluation: MentorEvaluation }) {
 
       {/* Signal rows */}
       <div className="divide-y divide-border/40 px-10 py-2">
-        <SignalRow
-          label="Problem strength"
-          value={strength.label}
-          valueColor={strength.color}
-        />
-        <SignalRow
-          label="Experiment quality"
-          value={quality.label}
-          valueColor={quality.color}
-        />
+        <SignalRow label="Problem strength" value={strength.label} valueColor={strength.color} />
+        <SignalRow label="Experiment quality" value={quality.label} valueColor={quality.color} />
         <SignalRow
           label="Biggest blindspot"
           value={evaluation.biggestBlindspot}

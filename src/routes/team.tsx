@@ -16,7 +16,7 @@ import { blankPendingIdea, savePendingIdea, type PendingIdea } from "@/lib/team-
 export const Route = createFileRoute("/team")({
   head: () => ({
     meta: [
-      { title: "Team Conversation — Uncertainty Navigator" },
+      { title: "Team Conversation — Specter" },
       {
         name: "description",
         content: "Define a one-week experiment worth betting on.",

@@ -18,7 +18,7 @@ import { analyzeCheckIn, type CheckInAnalysis } from "@/lib/check-in.functions";
 export const Route = createFileRoute("/check-in")({
   head: () => ({
     meta: [
-      { title: "Project Check-in — Uncertainty Navigator" },
+      { title: "Project Check-in — Specter" },
       {
         name: "description",
         content: "Re-score your AI pilot against the original affordable-loss commitment.",

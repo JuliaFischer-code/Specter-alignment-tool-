@@ -54,22 +54,16 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
         }
       >
         <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between px-8">
-          <Link to="/" className="flex items-baseline gap-3">
-            <span
-              className={
-                "h-2 w-2 translate-y-[-2px] " +
-                (dashboardSkin ? "rounded-full bg-[#24bf7a]" : "bg-primary")
-              }
-              aria-hidden
-            />
+          <Link to="/" className="flex items-center gap-3">
+            <SpecterMark small={!dashboardSkin} />
             <span
               className={
                 dashboardSkin
-                  ? "text-[22px] font-black leading-none tracking-normal text-[#07122f]"
+                  ? "font-serif text-[26px] font-bold leading-none tracking-normal text-[#07122f]"
                   : "font-serif text-[22px] leading-none"
               }
             >
-              Uncertainty Navigator
+              Specter
             </span>
             <span
               className={
@@ -78,7 +72,7 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
                   : "eyebrow ml-2 hidden md:inline"
               }
             >
-              Affordable Loss · AI Pilots
+              Pilot Governance Platform
             </span>
           </Link>
           <nav className="flex items-center gap-1">
@@ -161,11 +155,52 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
         }
       >
         <div className="mx-auto flex max-w-[1240px] items-center justify-between px-8 py-6 text-[12px] text-muted-foreground">
-          <span>Uncertainty Navigator — Internal Methodology Tool</span>
-          <span className="font-mono">v0.4 · Effectuation Practice</span>
+          <span>Specter — Pilot Governance Platform</span>
+          <span className="font-mono">v0.4 · Know where the line is</span>
         </div>
       </footer>
     </div>
+  );
+}
+
+function SpecterMark({ small = false }: { small?: boolean }) {
+  const sizeClass = small ? "h-6 w-6" : "h-9 w-9";
+
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      className={`${sizeClass} shrink-0`}
+      role="img"
+      aria-label="Specter logo"
+    >
+      <circle cx="32" cy="32" r="25" fill="none" stroke="#17345d" strokeWidth="1.5" />
+      <circle cx="32" cy="32" r="16" fill="none" stroke="#24bf7a" strokeWidth="3" />
+      <circle cx="32" cy="32" r="7" fill="none" stroke="#24bf7a" strokeWidth="3" />
+      <ellipse
+        cx="32"
+        cy="32"
+        rx="29"
+        ry="11"
+        fill="none"
+        stroke="#24bf7a"
+        strokeWidth="2"
+        transform="rotate(-16 32 32)"
+      />
+      <ellipse
+        cx="32"
+        cy="32"
+        rx="28"
+        ry="17"
+        fill="none"
+        stroke="#17345d"
+        strokeOpacity="0.85"
+        strokeWidth="1.5"
+        transform="rotate(24 32 32)"
+      />
+      <line x1="11" y1="32" x2="53" y2="32" stroke="#24bf7a" strokeWidth="2" />
+      <line x1="32" y1="11" x2="32" y2="53" stroke="#24bf7a" strokeWidth="2" />
+      <circle cx="32" cy="32" r="3" fill="#24bf7a" />
+    </svg>
   );
 }
 
