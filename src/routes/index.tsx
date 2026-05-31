@@ -415,10 +415,6 @@ const BH_CSS = `
     border-color: rgba(76,165,213,0.62);
     box-shadow: 0 0 6px rgba(76,165,213,0.24), 0 0 24px rgba(36,191,122,0.12), 0 24px 80px rgba(0,0,0,0.32);
   }
-  @keyframes bhExpand {
-    0%   { transform: translate(-50%,-50%) scale(1);  }
-    100% { transform: translate(-50%,-50%) scale(25); }
-  }
   @keyframes bhTitleSuck {
     0%   { opacity: 1; transform: scale(1);    filter: blur(0px);  }
     100% { opacity: 0; transform: scale(0.04); filter: blur(14px); }
@@ -482,7 +478,7 @@ function SpecterLanding({
           filter: isSelecting
             ? "brightness(0.38) contrast(1.06) saturate(0.72)"
             : "brightness(0.64) contrast(1.08) saturate(0.78)",
-          transform: isCollapsing ? "scale(1.18)" : "scale(1.03)",
+          transform: isCollapsing ? "scale(1.08)" : "scale(1.03)",
           transition: "opacity 700ms ease, filter 700ms ease, transform 900ms ease",
           animation: isSelecting ? undefined : "bhBackdropDrift 18s ease-in-out infinite",
           pointerEvents: "none",
@@ -497,23 +493,6 @@ function SpecterLanding({
           pointerEvents: "none",
         }}
       />
-
-      {isCollapsing && (
-        <div
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: "50%",
-            width: "clamp(220px,28vw,400px)",
-            height: "clamp(120px,18vh,240px)",
-            background: "#000",
-            borderRadius: "50%",
-            zIndex: 50,
-            animation: "bhExpand 800ms ease-in forwards",
-            pointerEvents: "none",
-          }}
-        />
-      )}
 
       {!isSelecting && (
         <div
@@ -533,7 +512,6 @@ function SpecterLanding({
               : undefined,
           }}
         >
-          <SpecterLandingMark />
           <h1
             style={{
               fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
@@ -550,10 +528,10 @@ function SpecterLanding({
           </h1>
           <p
             style={{
-              fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+              fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
               fontSize: "11px",
-              fontWeight: 700,
-              letterSpacing: "0.22em",
+              fontWeight: 800,
+              letterSpacing: "0.2em",
               color: "#24bf7a",
               textTransform: "uppercase",
               margin: "22px 0 0",
@@ -591,7 +569,7 @@ function SpecterLanding({
             textAlign: "center",
             zIndex: 15,
             pointerEvents: "none",
-            fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+            fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
             fontSize: "12px",
             letterSpacing: "0.15em",
             color: "#22c55e",
@@ -636,11 +614,11 @@ function SpecterLanding({
           <ModeCard
             variant="engineer"
             label="ENGINEER"
-            labelColor="#9bd8ff"
+            labelColor="#22c55e"
             title="Experiment series"
             description="Shape a small bet, test the evidence, and decide whether the idea deserves a handoff."
             cta="ENTER ENGINEER FLOW →"
-            ctaColor="#9bd8ff"
+            ctaColor="#22c55e"
             onClick={(e) => {
               e.stopPropagation();
               onEnterEngineer();
@@ -694,7 +672,7 @@ function ModeCard({
           letterSpacing: "0.18em",
           color: labelColor,
           textTransform: "uppercase",
-          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+          fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
         }}
       >
         {label}
@@ -730,51 +708,12 @@ function ModeCard({
           color: ctaColor,
           marginTop: "24px",
           textTransform: "uppercase",
-          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+          fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
         }}
       >
         {cta}
       </div>
     </button>
-  );
-}
-
-function SpecterLandingMark() {
-  return (
-    <svg
-      viewBox="0 0 64 64"
-      className="h-20 w-20 shrink-0 opacity-90 drop-shadow-[0_8px_22px_rgba(36,191,122,0.12)] md:h-24 md:w-24"
-      role="img"
-      aria-label="Specter logo"
-    >
-      <circle cx="32" cy="32" r="25" fill="none" stroke="#17345d" strokeWidth="1.5" />
-      <circle cx="32" cy="32" r="16" fill="none" stroke="#24bf7a" strokeWidth="3" />
-      <circle cx="32" cy="32" r="7" fill="none" stroke="#24bf7a" strokeWidth="3" />
-      <ellipse
-        cx="32"
-        cy="32"
-        rx="29"
-        ry="11"
-        fill="none"
-        stroke="#24bf7a"
-        strokeWidth="2"
-        transform="rotate(-16 32 32)"
-      />
-      <ellipse
-        cx="32"
-        cy="32"
-        rx="28"
-        ry="17"
-        fill="none"
-        stroke="#17345d"
-        strokeOpacity="0.85"
-        strokeWidth="1.5"
-        transform="rotate(24 32 32)"
-      />
-      <line x1="11" y1="32" x2="53" y2="32" stroke="#24bf7a" strokeWidth="2" />
-      <line x1="32" y1="11" x2="32" y2="53" stroke="#24bf7a" strokeWidth="2" />
-      <circle cx="32" cy="32" r="3" fill="#24bf7a" />
-    </svg>
   );
 }
 
