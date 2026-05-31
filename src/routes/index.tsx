@@ -162,8 +162,10 @@ function Index() {
 
   return (
     <AppShell>
+      <div className="min-h-screen bg-[#f4f6f9]">
       <section className="mx-auto max-w-[1340px] px-6 py-8">
-        <div className="mb-6 grid grid-cols-1 gap-5 rounded-[8px] bg-[#07122f] p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.12)] xl:grid-cols-[1fr_380px]">
+        <div className="relative mb-8">
+        <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_380px]">
           <div>
             <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
               Manager · Step 01 · Commitment studio
@@ -182,14 +184,16 @@ function Index() {
             <ManagerHeroMetric label="Questions" value={`${progress}/${total}`} />
           </div>
         </div>
+        <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
+        </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[330px_1fr]">
-          <aside className="space-y-5">
-            <div className="rounded-[8px] bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
-              <div className="mb-4 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+          <aside className="space-y-7 px-1">
+            <div>
+              <div className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
                 Question set
               </div>
-              <ol className="space-y-2">
+              <ol className="space-y-1">
                 {promptScript.map((p, i) => {
                   const done = answers[p.id].trim().length > 0;
                   const active = i === step;
@@ -198,10 +202,10 @@ function Index() {
                       <button
                         onClick={() => setStep(i)}
                         className={
-                          "group flex w-full items-start gap-3 rounded-[8px] px-3 py-3 text-left text-[13px] font-semibold transition-colors " +
+                          "group flex w-full items-start gap-3 rounded-[12px] px-4 py-3 text-left text-[13px] font-semibold transition-all " +
                           (active
-                            ? "bg-[#dff5eb] text-[#07122f]"
-                            : "text-[#697081] hover:bg-[#f4f2f3] hover:text-[#07122f]")
+                            ? "bg-white shadow-[0_1px_4px_rgba(0,0,0,0.08)] text-[#07122f]"
+                            : "text-[#697081] hover:bg-white/70 hover:text-[#07122f]")
                         }
                       >
                         <span className="w-6 shrink-0 font-mono text-[11px] text-[#08764c]">
@@ -220,7 +224,7 @@ function Index() {
                   );
                 })}
               </ol>
-              <div className="mt-6 h-2 overflow-hidden rounded-full bg-[#f0eeee]">
+              <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#e2e5ea]">
                 <div
                   className="h-full rounded-full bg-[#24bf7a]"
                   style={{ width: `${coverage}%` }}
@@ -237,7 +241,7 @@ function Index() {
           </aside>
 
           <div className="space-y-5">
-            <div className="rounded-[8px] bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+            <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="mb-1 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
@@ -261,7 +265,7 @@ function Index() {
                   <label
                     htmlFor="pdf-upload"
                     className={
-                      "inline-flex cursor-pointer items-center gap-2 rounded-[8px] px-4 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] transition-colors " +
+                      "inline-flex cursor-pointer items-center gap-2 rounded-[12px] px-4 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] transition-colors " +
                       (pdfUploading
                         ? "pointer-events-none bg-[#f4f2f3] text-[#697081] opacity-50"
                         : "bg-[#07122f] text-white hover:bg-[#12204a]")
@@ -292,14 +296,14 @@ function Index() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_320px]">
-              <div className="rounded-[8px] bg-white p-8 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+              <div className="rounded-[16px] bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-[#08764c]">
                     Question {String(step + 1).padStart(2, "0")} / {total}
                   </span>
                   <button
                     onClick={loadSample}
-                    className="inline-flex items-center gap-2 rounded-[8px] bg-[#f7f5f4] px-3 py-2 text-[12px] font-bold text-[#07122f] hover:bg-[#dff5eb]"
+                    className="inline-flex items-center gap-2 rounded-[12px] bg-[#f4f6f9] px-3 py-2 text-[12px] font-bold text-[#07122f] hover:bg-[#dff5eb]"
                   >
                     <Sparkles className="h-4 w-4 text-[#24bf7a]" />
                     Load worked example
@@ -316,7 +320,7 @@ function Index() {
                   onChange={(e) => update(e.target.value)}
                   placeholder={current.placeholder}
                   rows={7}
-                  className="mt-8 w-full resize-none rounded-[8px] border border-[#e4e0de] bg-[#f7f5f4] p-4 text-[15px] font-medium leading-relaxed text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
+                  className="mt-8 w-full resize-none rounded-[12px] border border-[#e4e0de] bg-[#f4f6f9] p-4 text-[15px] font-medium leading-relaxed text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
                   autoFocus
                 />
 
@@ -332,14 +336,14 @@ function Index() {
                     {step < total - 1 ? (
                       <button
                         onClick={next}
-                        className="inline-flex items-center gap-2 rounded-[8px] bg-[#07122f] px-6 py-3 text-[13px] font-bold tracking-wide text-white transition-transform hover:-translate-y-0.5"
+                        className="inline-flex items-center gap-2 rounded-[12px] bg-[#07122f] px-6 py-3 text-[13px] font-bold tracking-wide text-white transition-transform hover:-translate-y-0.5"
                       >
                         Next question <ArrowRight className="h-4 w-4" />
                       </button>
                     ) : (
                       <button
                         onClick={() => finalize(answers)}
-                        className="inline-flex items-center gap-2 rounded-[8px] bg-[#24bf7a] px-6 py-3 text-[13px] font-bold tracking-wide text-[#07122f] transition-transform hover:-translate-y-0.5"
+                        className="inline-flex items-center gap-2 rounded-[12px] bg-[#24bf7a] px-6 py-3 text-[13px] font-bold tracking-wide text-[#07122f] transition-transform hover:-translate-y-0.5"
                       >
                         Generate commitment document <ArrowRight className="h-4 w-4" />
                       </button>
@@ -353,6 +357,7 @@ function Index() {
           </div>
         </div>
       </section>
+      </div>
     </AppShell>
   );
 }
@@ -623,7 +628,7 @@ function SpecterLandingMark() {
 
 function ManagerHeroMetric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-[8px] bg-white p-4 text-[#07122f]">
+    <div className="rounded-[14px] bg-white p-4 text-[#07122f]">
       <div className="text-[34px] font-black leading-none">{value}</div>
       <div className="mt-2 text-[12px] font-bold uppercase tracking-[0.12em] text-[#8d93a1]">
         {label}
@@ -651,12 +656,12 @@ function ManagerReadinessPanel({
   ];
 
   return (
-    <div className="rounded-[8px] bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+    <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
       <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
         <Gauge className="h-4 w-4 text-[#24bf7a]" />
         Commitment readiness
       </div>
-      <div className="rounded-[8px] bg-[#07122f] p-5 text-white">
+      <div className="rounded-[16px] bg-[#07122f] p-5 text-white">
         <div className="text-[44px] font-black leading-none">{readiness}%</div>
         <div className="mt-2 text-[12px] font-bold uppercase tracking-[0.12em] text-white/55">
           Steering-ready
@@ -672,8 +677,8 @@ function ManagerReadinessPanel({
             <div
               key={check.label}
               className={
-                "flex items-center gap-3 rounded-[8px] px-3 py-2 text-[13px] font-semibold " +
-                (check.active ? "bg-[#dff5eb] text-[#07122f]" : "bg-[#f7f5f4] text-[#697081]")
+                "flex items-center gap-3 rounded-[10px] px-3 py-2 text-[13px] font-semibold " +
+                (check.active ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.07)] text-[#07122f]" : "text-[#697081]")
               }
             >
               <Icon className={check.active ? "h-4 w-4 text-[#24bf7a]" : "h-4 w-4"} />
@@ -692,12 +697,12 @@ function ManagerReadinessPanel({
 
 function CommitmentPreview({ answers, readiness }: { answers: CommitmentData; readiness: number }) {
   return (
-    <div className="rounded-[8px] bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+    <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
       <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
         <PlayCircle className="h-4 w-4 text-[#24bf7a]" />
         Live brief
       </div>
-      <div className="rounded-[8px] bg-[#f7f5f4] p-5">
+      <div className="rounded-[12px] bg-[#f4f6f9] p-5">
         <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-[#08764c]">
           Pilot
         </div>

@@ -188,7 +188,7 @@ function CheckInTimeline({ checkIns }: { checkIns: CheckInEntry[] }) {
 
   return (
     <section className="mb-6">
-      <div className="rounded-[8px] bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+      <div className="rounded-[12px] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
         <div className="mb-6 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
           <History className="h-4 w-4 text-[#24bf7a]" />
           Check-in history
@@ -382,8 +382,10 @@ function CheckInPage() {
 
   return (
     <AppShell>
+      <div className="min-h-screen bg-[#f4f6f9]">
       <section className="mx-auto max-w-[1340px] px-6 py-8">
-        <div className="mb-6 grid grid-cols-1 gap-5 rounded-[8px] bg-[#07122f] p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.12)] xl:grid-cols-[1fr_360px]">
+        <div className="relative mb-8">
+        <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_360px]">
           <div>
             <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
               Manager · Step 03 · Check-in
@@ -402,13 +404,15 @@ function CheckInPage() {
             <CheckHeroMetric label="History" value={checkIns.length} />
           </div>
         </div>
+        <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
+        </div>
 
         <CheckInTimeline checkIns={checkIns} />
 
         <div className="grid grid-cols-12 gap-6">
           {/* Verdict rail */}
           <aside className="col-span-12 lg:col-span-4">
-            <div className="sticky top-8 rounded-[8px] bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+            <div className="sticky top-8 rounded-[12px] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
               <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
                 <Activity className="h-4 w-4 text-[#24bf7a]" />
                 Review status
@@ -461,7 +465,7 @@ function CheckInPage() {
               <button
                 onClick={handleAnalyze}
                 disabled={running}
-                className="mt-6 block w-full rounded-[8px] bg-[#07122f] px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="mt-6 block w-full rounded-[12px] bg-[#07122f] px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {running
                   ? "Analyzing…"
@@ -472,7 +476,7 @@ function CheckInPage() {
 
               <button
                 onClick={applyDemoCheckIn}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-[8px] border border-[#dff5eb] bg-[#dff5eb] px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#c7efd9]"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border border-[#dff5eb] bg-[#dff5eb] px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#c7efd9]"
               >
                 <Sparkles className="h-4 w-4 text-[#08764c]" />
                 Load demo check-in
@@ -481,7 +485,7 @@ function CheckInPage() {
               <button
                 onClick={() => handleSaveCheckIn()}
                 disabled={completed === 0}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-[8px] border border-[#e4e0de] bg-white px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#dff5eb] disabled:opacity-30"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border border-[#e4e0de] bg-white px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#dff5eb] disabled:opacity-30"
               >
                 <Save className="h-4 w-4" />
                 {saved ? "Saved to history" : "Save check-in"}
@@ -513,7 +517,7 @@ function CheckInPage() {
               return (
                 <div
                   key={d.key}
-                  className="rounded-[8px] bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.06)]"
+                  className="rounded-[12px] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
                 >
                   <div className="flex items-start justify-between gap-6">
                     <div>
@@ -537,7 +541,7 @@ function CheckInPage() {
                     )}
                   </div>
 
-                  <div className="mt-6 rounded-[8px] border-l-4 border-[#24bf7a] bg-[#f7f5f4] p-4">
+                  <div className="mt-6 rounded-[12px] border-l-4 border-[#24bf7a] bg-[#f4f6f9] p-4">
                     <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
                       Original commitment
                     </div>
@@ -549,7 +553,7 @@ function CheckInPage() {
                   </div>
 
                   {lastValue && (
-                    <div className="mt-3 rounded-[8px] border-l-4 border-[#d9d5d2] bg-[#faf9f8] p-4">
+                    <div className="mt-3 rounded-[12px] border-l-4 border-[#d9d5d2] bg-[#f4f6f9] p-4">
                       <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
                         Last check-in
                       </div>
@@ -571,12 +575,12 @@ function CheckInPage() {
                       onChange={(e) => setCurrentValues((c) => ({ ...c, [d.key]: e.target.value }))}
                       placeholder={d.hint}
                       rows={2}
-                      className="w-full resize-none rounded-[8px] border border-[#e4e0de] bg-[#f7f5f4] p-3 text-[14px] font-medium text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
+                      className="w-full resize-none rounded-[12px] border border-[#e4e0de] bg-[#f4f6f9] p-3 text-[14px] font-medium text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
                     />
                   </div>
 
                   {proximity && (
-                    <div className="mt-4 rounded-[8px] bg-[#f7f5f4] p-4">
+                    <div className="mt-4 rounded-[12px] bg-[#f4f6f9] p-4">
                       <div className="mb-2 flex items-center justify-between text-[12px] font-bold text-[#697081]">
                         <span>Limit proximity</span>
                         <span>
@@ -602,7 +606,7 @@ function CheckInPage() {
                   {dimA && (
                     <div
                       className={
-                        "mt-4 rounded-[8px] border-l-4 p-4 " +
+                        "mt-4 rounded-[12px] border-l-4 p-4 " +
                         (dimA.verdict === "breach"
                           ? "border-red-600 bg-red-50"
                           : dimA.verdict === "watch"
@@ -625,7 +629,7 @@ function CheckInPage() {
                     onChange={(e) => setNotes((n) => ({ ...n, [d.key]: e.target.value }))}
                     placeholder="What changed since the last check-in? Evidence, anecdote, number."
                     rows={3}
-                    className="mt-4 w-full resize-none rounded-[8px] border border-[#e4e0de] bg-[#f7f5f4] p-3 text-[14px] font-medium text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
+                    className="mt-4 w-full resize-none rounded-[12px] border border-[#e4e0de] bg-[#f4f6f9] p-3 text-[14px] font-medium text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
                   />
 
                   <div className="mt-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
@@ -639,10 +643,10 @@ function CheckInPage() {
                           key={s}
                           onClick={() => setScores((prev) => ({ ...prev, [d.key]: s }))}
                           className={
-                            "flex items-center gap-2 rounded-[8px] px-4 py-2 text-[12px] font-bold transition-colors " +
+                            "flex items-center gap-2 rounded-[12px] px-4 py-2 text-[12px] font-bold transition-colors " +
                             (active
                               ? "bg-[#07122f] text-white"
-                              : "bg-[#f7f5f4] text-[#07122f] hover:bg-[#dff5eb]")
+                              : "bg-[#f4f6f9] text-[#07122f] hover:bg-[#dff5eb]")
                           }
                         >
                           <span className={`h-2 w-2 ${statusMeta[s].dot}`} />
@@ -671,12 +675,12 @@ function CheckInPage() {
         <section className="mx-auto mt-12 max-w-[1340px] px-6">
           <div
             className={
-              "rounded-[8px] bg-white p-8 shadow-[0_18px_48px_rgba(15,23,42,0.06)] " +
+              "rounded-[16px] bg-white p-8 shadow-[0_2px_8px_rgba(0,0,0,0.08)] ring-2 " +
               (analysis.overallVerdict === "breach"
-                ? "border border-red-600"
+                ? "ring-red-500"
                 : analysis.overallVerdict === "watch"
-                  ? "border border-[#d79000]"
-                  : "border border-[#24bf7a]")
+                  ? "ring-[#d79000]"
+                  : "ring-[#24bf7a]")
             }
           >
             <div className="mb-3 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
@@ -688,7 +692,7 @@ function CheckInPage() {
             </h2>
 
             {analysis.violatedKillCriteria.length > 0 && (
-              <div className="mt-6 rounded-[8px] bg-red-50 p-5">
+              <div className="mt-6 rounded-[12px] bg-red-50 p-5">
                 <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-red-600">
                   Violated kill criteria
                 </div>
@@ -708,6 +712,7 @@ function CheckInPage() {
       )}
 
       <div className="h-24" />
+      </div>
     </AppShell>
   );
 }
@@ -745,7 +750,7 @@ function CheckInResultsDashboard({
   const topRisk = [...riskRows].sort((a, b) => b.risk - a.risk)[0];
 
   return (
-    <div className="mt-6 space-y-6 rounded-[8px] bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+    <div className="mt-6 space-y-6 rounded-[12px] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
@@ -771,7 +776,7 @@ function CheckInResultsDashboard({
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[8px] bg-[#f7f5f4] p-5">
+        <div className="rounded-[12px] bg-[#f4f6f9] p-5">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
               <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
@@ -818,12 +823,12 @@ function CheckInResultsDashboard({
           </div>
         </div>
 
-        <div className="rounded-[8px] bg-[#07122f] p-5 text-white">
+        <div className="rounded-[16px] bg-[#07122f] p-5 text-white">
           <div className="mb-5 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-white/55">
             <Grid2X2 className="h-4 w-4 text-[#24bf7a]" />
             Attention matrix
           </div>
-          <div className="relative h-[320px] rounded-[8px] border border-white/15 bg-white/[0.04]">
+          <div className="relative h-[320px] rounded-[12px] border border-white/15 bg-white/[0.04]">
             <div className="absolute left-1/2 top-0 h-full w-px bg-white/15" />
             <div className="absolute left-0 top-1/2 h-px w-full bg-white/15" />
             <div className="absolute left-4 top-4 text-[11px] font-bold uppercase tracking-[0.1em] text-white/50">
@@ -855,7 +860,7 @@ function CheckInResultsDashboard({
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2">
             {(["on-track", "watch", "breach"] as Status[]).map((status) => (
-              <div key={status} className="rounded-[8px] bg-white/8 p-3">
+              <div key={status} className="rounded-[12px] bg-white/8 p-3">
                 <div className={`mb-2 h-2 w-2 ${statusMeta[status].dot}`} />
                 <div className="text-[18px] font-black">
                   {Object.values(scores).filter((score) => score === status).length}
@@ -874,7 +879,7 @@ function CheckInResultsDashboard({
 
 function ResultPill({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[8px] bg-[#f7f5f4] px-4 py-3">
+    <div className="rounded-[12px] bg-[#f4f6f9] px-4 py-3">
       <div className="text-[20px] font-black leading-none text-[#07122f]">{value}</div>
       <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
         {label}
@@ -885,7 +890,7 @@ function ResultPill({ label, value }: { label: string; value: string }) {
 
 function CheckHeroMetric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-[8px] bg-white p-4 text-[#07122f]">
+    <div className="rounded-[14px] bg-white p-4 text-[#07122f]">
       <div className="text-[34px] font-black leading-none">{value}</div>
       <div className="mt-2 text-[12px] font-bold uppercase tracking-[0.12em] text-[#8d93a1]">
         {label}

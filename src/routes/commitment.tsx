@@ -91,8 +91,10 @@ function CommitmentPage() {
 
   return (
     <AppShell>
+      <div className="min-h-screen bg-[#f4f6f9]">
       <div className="mx-auto max-w-[1340px] px-6 py-8">
-        <div className="mb-6 grid grid-cols-1 gap-5 rounded-[8px] bg-[#07122f] p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.12)] xl:grid-cols-[1fr_420px]">
+        <div className="relative mb-8">
+        <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_420px]">
           <div>
             <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
               Manager · Step 02 · Commitment
@@ -113,18 +115,20 @@ function CommitmentPage() {
             />
           </div>
         </div>
+        <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
+        </div>
 
         <div className="mb-6 flex flex-wrap gap-3">
           <button
             onClick={() => window.print()}
-            className="inline-flex items-center gap-2 rounded-[8px] bg-white px-4 py-2.5 text-[13px] font-bold text-[#07122f] shadow-[0_12px_32px_rgba(15,23,42,0.06)] hover:bg-[#f7f5f4]"
+            className="inline-flex items-center gap-2 rounded-[12px] bg-white px-4 py-2.5 text-[13px] font-bold text-[#07122f] shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:bg-[#f4f6f9]"
           >
             <Printer className="h-4 w-4" />
             Print / Export PDF
           </button>
           <Link
             to="/check-in"
-            className="inline-flex items-center gap-2 rounded-[8px] bg-[#24bf7a] px-4 py-2.5 text-[13px] font-bold text-[#07122f] shadow-[0_12px_32px_rgba(15,23,42,0.06)] hover:opacity-90"
+            className="inline-flex items-center gap-2 rounded-[12px] bg-[#24bf7a] px-4 py-2.5 text-[13px] font-bold text-[#07122f] shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:opacity-90"
           >
             Run check-in <ArrowRight className="h-4 w-4" />
           </Link>
@@ -132,7 +136,7 @@ function CommitmentPage() {
 
         <article className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
           <aside className="space-y-5">
-            <div className="rounded-[8px] bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+            <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
               <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
                 <ShieldCheck className="h-4 w-4 text-[#24bf7a]" />
                 Envelope
@@ -144,7 +148,7 @@ function CommitmentPage() {
               </div>
             </div>
 
-            <div className="rounded-[8px] bg-[#07122f] p-5 text-white shadow-[0_18px_48px_rgba(15,23,42,0.10)]">
+            <div className="rounded-[16px] bg-[#07122f] p-5 text-white shadow-[0_4px_20px_rgba(7,18,47,0.22)]">
               <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-white/55">
                 Review status
               </div>
@@ -159,7 +163,7 @@ function CommitmentPage() {
             </div>
           </aside>
 
-          <div className="rounded-[8px] bg-white p-8 shadow-[0_18px_48px_rgba(15,23,42,0.06)] lg:p-10">
+          <div className="rounded-[16px] bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.08)] lg:p-10">
             {/* Doc header */}
             <div className="grid grid-cols-12 gap-8 border-b border-[#e4e0de] pb-8">
               <div className="col-span-12 md:col-span-7">
@@ -194,7 +198,7 @@ function CommitmentPage() {
                   <h3 className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#a1a6b3]">
                     {s.title}
                   </h3>
-                  <div className="mt-5 divide-y divide-[#e4e0de] rounded-[8px] bg-[#f7f5f4]">
+                  <div className="mt-5 divide-y divide-[#e4e0de] rounded-[12px] bg-[#f4f6f9]">
                     {s.fields.map((f) => (
                       <div key={f.id} className="grid grid-cols-12 gap-6 py-5">
                         <div className="col-span-12 md:col-span-3">
@@ -223,6 +227,7 @@ function CommitmentPage() {
             </div>
           </div>
         </article>
+      </div>
       </div>
     </AppShell>
   );
@@ -253,7 +258,7 @@ function SignatureBlock({ label, name }: { label: string; name: string }) {
 
 function CommitmentHeroMetric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-[8px] bg-white p-4 text-[#07122f]">
+    <div className="rounded-[14px] bg-white p-4 text-[#07122f]">
       <div className="truncate text-[34px] font-black leading-none capitalize">{value}</div>
       <div className="mt-2 text-[12px] font-bold uppercase tracking-[0.12em] text-[#8d93a1]">
         {label}
@@ -272,7 +277,7 @@ function CommitmentMeta({
   value: string;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-[8px] bg-[#f7f5f4] p-3">
+    <div className="flex items-start gap-3 rounded-[12px] bg-[#f4f6f9] p-3">
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#24bf7a]" />
       <div className="min-w-0">
         <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">

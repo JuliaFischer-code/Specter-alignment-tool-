@@ -62,74 +62,82 @@ function IdeaBoardPage() {
 
   return (
     <AppShell teamMode>
-      <section className="mx-auto grid max-w-[1340px] grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-[280px_1fr]">
-        <IdeaBoardSidebar ideas={ideas} />
-
-        <div className="min-w-0">
-          <DashboardHero ideas={ideas} />
-          <ProjectProgressHeader ideas={ideas} />
-          <PortfolioSnapshot ideas={ideas} />
-
-          <div className="mb-6 flex flex-col gap-3 rounded-[8px] border border-[#e4e0de] bg-white p-2 shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex gap-2">
-              <TabButton active={activeTab === "all"} onClick={() => setActiveTab("all")}>
-                All experiments
-              </TabButton>
-              <TabButton active={activeTab === "matches"} onClick={() => setActiveTab("matches")}>
-                Idea Matches
-                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-[6px] bg-[#dff5eb] px-1.5 font-mono text-[10px] text-[#24bf7a]">
-                  1
-                </span>
-              </TabButton>
-            </div>
-            <Link
-              to="/team"
-              className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#24bf7a] px-4 py-2.5 text-[13px] font-semibold text-[#07122f] transition-transform hover:-translate-y-0.5"
-            >
-              <Plus className="h-4 w-4" />
-              Add experiment
-            </Link>
+      <div className="min-h-screen bg-[#f4f6f9]">
+        <div className="mx-auto max-w-[1340px] px-6 pb-8">
+          <div className="relative mb-6">
+            <DashboardHero ideas={ideas} />
+            <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
           </div>
 
-          {activeTab === "all" ? (
-            <>
-              {ideas.length === 0 ? (
-                <div className="rounded-[8px] border border-[#e4e0de] bg-white py-16 text-center text-muted-foreground shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
-                  <p>No experiments yet.</p>
-                  <Link
-                    to="/team"
-                    className="mt-4 inline-block text-[13px] text-[#07122f] underline underline-offset-4"
-                  >
-                    Start the first one →
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {ideas.map((idea) => (
-                    <IdeaRow
-                      key={idea.id}
-                      idea={idea}
-                      hasSimilar={SIMILAR_IDS.has(idea.id)}
-                      expanded={expandedId === idea.id}
-                      onToggle={() => setExpandedId(expandedId === idea.id ? null : idea.id)}
-                      onCheckIn={(checkIn, newStatus) => addCheckIn(idea.id, checkIn, newStatus)}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <IdeaMatchesTab ideas={ideas} onConnect={showToast} />
-          )}
-        </div>
-      </section>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+            <IdeaBoardSidebar ideas={ideas} />
 
-      {/* Toast */}
-      {toastVisible && (
-        <div className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-[8px] border border-[#d8efe4] bg-white px-6 py-3 text-[13px] font-medium text-[#07122f] shadow-[0_18px_48px_rgba(15,23,42,0.14)]">
-          Feature coming soon: team introductions
+            <div className="min-w-0">
+              <ProjectProgressHeader ideas={ideas} />
+              <PortfolioSnapshot ideas={ideas} />
+
+              <div className="mb-6 flex flex-col gap-3 rounded-[12px] bg-white p-2 shadow-[0_1px_3px_rgba(0,0,0,0.08)] sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex gap-2">
+                  <TabButton active={activeTab === "all"} onClick={() => setActiveTab("all")}>
+                    All experiments
+                  </TabButton>
+                  <TabButton active={activeTab === "matches"} onClick={() => setActiveTab("matches")}>
+                    Idea Matches
+                    <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-[6px] bg-[#dff5eb] px-1.5 font-mono text-[10px] text-[#24bf7a]">
+                      1
+                    </span>
+                  </TabButton>
+                </div>
+                <Link
+                  to="/team"
+                  className="inline-flex items-center justify-center gap-2 rounded-[12px] bg-[#24bf7a] px-4 py-2.5 text-[13px] font-semibold text-[#07122f] transition-transform hover:-translate-y-0.5"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add experiment
+                </Link>
+              </div>
+
+              {activeTab === "all" ? (
+                <>
+                  {ideas.length === 0 ? (
+                    <div className="rounded-[12px] bg-white py-16 text-center text-muted-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+                      <p>No experiments yet.</p>
+                      <Link
+                        to="/team"
+                        className="mt-4 inline-block text-[13px] text-[#07122f] underline underline-offset-4"
+                      >
+                        Start the first one →
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {ideas.map((idea) => (
+                        <IdeaRow
+                          key={idea.id}
+                          idea={idea}
+                          hasSimilar={SIMILAR_IDS.has(idea.id)}
+                          expanded={expandedId === idea.id}
+                          onToggle={() => setExpandedId(expandedId === idea.id ? null : idea.id)}
+                          onCheckIn={(checkIn, newStatus) => addCheckIn(idea.id, checkIn, newStatus)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <IdeaMatchesTab ideas={ideas} onConnect={showToast} />
+              )}
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Toast */}
+        {toastVisible && (
+          <div className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-[12px] bg-white px-6 py-3 text-[13px] font-medium text-[#07122f] shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+            Feature coming soon: team introductions
+          </div>
+        )}
+      </div>
     </AppShell>
   );
 }
@@ -149,7 +157,7 @@ function IdeaBoardSidebar({ ideas }: { ideas: IdeaCard[] }) {
   ];
 
   return (
-    <aside className="h-fit rounded-[8px] bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.10)] lg:sticky lg:top-8">
+    <aside className="h-fit rounded-[16px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] lg:sticky lg:top-8">
       <div className="mb-5 flex items-center gap-4 lg:mb-8">
         <SpecterWorkspaceMark />
         <div>
@@ -172,10 +180,10 @@ function IdeaBoardSidebar({ ideas }: { ideas: IdeaCard[] }) {
             <button
               key={item.label}
               className={
-                "flex w-full items-center gap-4 rounded-[8px] px-4 py-3 text-left text-[15px] font-semibold transition-colors " +
+                "flex w-full items-center gap-4 rounded-[12px] px-4 py-3 text-left text-[15px] font-semibold transition-colors " +
                 (item.active
-                  ? "bg-[#dff5eb] text-[#07122f]"
-                  : "text-[#697081] hover:bg-[#f4f2f3] hover:text-[#07122f]")
+                  ? "bg-[#f4f6f9] text-[#07122f]"
+                  : "text-[#697081] hover:bg-[#f4f6f9]/80 hover:text-[#07122f]")
               }
             >
               <Icon className={item.active ? "h-5 w-5 text-[#24bf7a]" : "h-5 w-5"} />
@@ -185,7 +193,7 @@ function IdeaBoardSidebar({ ideas }: { ideas: IdeaCard[] }) {
         })}
       </nav>
 
-      <div className="mt-8 hidden rounded-[8px] bg-[#07122f] p-4 text-white lg:block">
+      <div className="mt-8 hidden rounded-[16px] bg-[#07122f] p-4 text-white lg:block">
         <div className="mb-3 flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-[#24bf7a]" />
           <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-white/60">
@@ -217,7 +225,7 @@ function SidebarMetric({ label, value }: { label: string; value: number | string
 
 function SpecterWorkspaceMark() {
   return (
-    <div className="flex h-14 w-14 items-center justify-center rounded-[8px] bg-[#07122f]">
+    <div className="flex h-14 w-14 items-center justify-center rounded-[12px] bg-[#07122f]">
       <svg viewBox="0 0 64 64" className="h-11 w-11" role="img" aria-label="Specter logo">
         <circle cx="32" cy="32" r="25" fill="none" stroke="#17345d" strokeWidth="1.5" />
         <circle cx="32" cy="32" r="16" fill="none" stroke="#24bf7a" strokeWidth="3" />
@@ -255,7 +263,7 @@ function DashboardHero({ ideas }: { ideas: IdeaCard[] }) {
   const checkedIn = ideas.reduce((sum, idea) => sum + idea.checkIns.length, 0);
 
   return (
-    <div className="mb-6 grid grid-cols-1 gap-5 rounded-[8px] bg-[#07122f] p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.12)] xl:grid-cols-[1fr_300px]">
+    <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_300px]">
       <div>
         <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
           Team · Step 02 · Idea board
@@ -279,7 +287,7 @@ function DashboardHero({ ideas }: { ideas: IdeaCard[] }) {
 
 function HeroStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-[8px] bg-white p-4 text-[#07122f]">
+    <div className="rounded-[14px] bg-white p-4 text-[#07122f]">
       <div className="text-[34px] font-black leading-none">{value}</div>
       <div className="mt-2 text-[12px] font-bold uppercase tracking-[0.12em] text-[#8d93a1]">
         {label}
@@ -373,7 +381,7 @@ function ProgressStat({
   }[tone];
 
   return (
-    <div className="rounded-[8px] bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+    <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
@@ -447,8 +455,8 @@ function PortfolioSnapshot({ ideas }: { ideas: IdeaCard[] }) {
   ];
 
   return (
-    <div className="mb-6 rounded-[8px] bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
-      <div className="grid grid-cols-1 divide-y divide-[#ece8e6] lg:grid-cols-[1.35fr_1fr] lg:divide-x lg:divide-y-0">
+    <div className="mb-6 rounded-[12px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr]">
         <div className="p-6">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
@@ -482,7 +490,7 @@ function PortfolioSnapshot({ ideas }: { ideas: IdeaCard[] }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 divide-y divide-[#ece8e6] p-0 md:grid-cols-[1fr_220px] md:divide-x md:divide-y-0 lg:grid-cols-1 lg:divide-x-0 lg:divide-y">
+        <div className="grid grid-cols-1 border-t border-[#f0eeee] p-0 md:grid-cols-[1fr_220px] md:border-l md:border-t-0 lg:grid-cols-1 lg:border-l-0 lg:border-t">
           <div className="p-6">
             <div className="mb-5 text-[12px] font-bold uppercase tracking-[0.16em] text-[#a1a6b3]">
               Pipeline
@@ -538,7 +546,7 @@ function MetricCell({
     tone === "primary" ? "text-primary" : tone === "watch" ? "text-amber-600" : "text-foreground";
 
   return (
-    <div className="rounded-[8px] bg-[#f7f5f4] p-4">
+    <div className="rounded-[12px] bg-[#f4f6f9] p-4">
       <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
         {label}
       </div>
@@ -584,7 +592,7 @@ function MiniVerdict({
   className: string;
 }) {
   return (
-    <div className="rounded-[8px] bg-[#f7f5f4] p-3 text-center">
+    <div className="rounded-[12px] bg-[#f4f6f9] p-3 text-center">
       <div className={`text-[18px] font-black leading-none ${className}`}>{value}</div>
       <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
         {label}
@@ -606,7 +614,7 @@ function TabButton({
     <button
       onClick={onClick}
       className={
-        "flex items-center gap-1 rounded-[8px] px-4 py-2.5 text-[13px] font-bold transition-colors " +
+        "flex items-center gap-1 rounded-[10px] px-4 py-2.5 text-[13px] font-bold transition-colors " +
         (active
           ? "bg-[#07122f] text-white"
           : "text-[#697081] hover:bg-[#f4f2f3] hover:text-[#07122f]")
@@ -636,7 +644,7 @@ function IdeaMatchesTab({ ideas, onConnect }: { ideas: IdeaCard[]; onConnect: ()
       </p>
 
       {/* Match card */}
-      <div className="overflow-hidden rounded-[8px] bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+      <div className="overflow-hidden rounded-[12px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-[#f0eeee] px-8 py-4">
           <span className="h-2 w-2 rounded-full bg-[#d79000]" aria-hidden />
@@ -678,7 +686,7 @@ function IdeaMatchesTab({ ideas, onConnect }: { ideas: IdeaCard[]; onConnect: ()
         <div className="border-t border-[#f0eeee] px-8 py-5">
           <button
             onClick={onConnect}
-            className="rounded-[8px] bg-[#fff0c7] px-5 py-2.5 text-[13px] font-bold text-[#8b5b00] transition-colors hover:bg-[#ffe39a]"
+            className="rounded-[12px] bg-[#fff0c7] px-5 py-2.5 text-[13px] font-bold text-[#8b5b00] transition-colors hover:bg-[#ffe39a]"
           >
             Connect these teams →
           </button>
@@ -719,7 +727,7 @@ function IdeaRow({
   const canCreateManagerBrief = idea.mentorEvaluation?.verdict === "pursue";
 
   return (
-    <div className="overflow-hidden rounded-[8px] bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+    <div className="overflow-hidden rounded-[12px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
       {/* Summary row */}
       <div className="flex items-start gap-6 px-8 py-6">
         <div className="flex-1 min-w-0">
@@ -748,7 +756,7 @@ function IdeaRow({
         </div>
         <button
           onClick={onToggle}
-          className="shrink-0 rounded-[8px] bg-[#f4f2f3] px-4 py-2 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#dff5eb]"
+          className="shrink-0 rounded-[12px] bg-[#f4f6f9] px-4 py-2 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#dff5eb]"
         >
           {expanded ? "Collapse" : "View + Check in"}
         </button>
@@ -796,7 +804,7 @@ function IdeaRow({
                 </div>
                 <button
                   onClick={() => downloadManagerBriefPdf(idea)}
-                  className="shrink-0 rounded-[8px] bg-[#07122f] px-5 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] text-white transition-transform hover:-translate-y-0.5"
+                  className="shrink-0 rounded-[12px] bg-[#07122f] px-5 py-2.5 text-[12px] font-bold uppercase tracking-[0.08em] text-white transition-transform hover:-translate-y-0.5"
                 >
                   Download manager brief PDF
                 </button>
@@ -979,7 +987,7 @@ function ReadinessProfile({ idea }: { idea: IdeaCard }) {
             check-in evidence.
           </p>
         </div>
-        <div className="rounded-[8px] bg-[#dff5eb] px-4 py-3 text-right">
+        <div className="rounded-[12px] bg-[#dff5eb] px-4 py-3 text-right">
           <div className="text-[32px] font-black leading-none text-[#08764c]">{average}</div>
           <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#08764c]/70">
             Readiness
@@ -994,7 +1002,7 @@ function ReadinessProfile({ idea }: { idea: IdeaCard }) {
           ))}
         </div>
 
-        <div className="rounded-[8px] bg-[#f7f5f4] p-5">
+        <div className="rounded-[12px] bg-[#f4f6f9] p-5">
           <div className="mb-5">
             <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
               Readiness radar
@@ -1263,7 +1271,7 @@ function CheckInForm({
 
   if (saved) {
     return (
-      <div className="border-t border-[#f0eeee] bg-[#f7f5f4] px-8 py-6">
+      <div className="border-t border-[#f0eeee] bg-[#f4f6f9] px-8 py-6">
         <p className="text-[13px] font-medium text-[#697081]">
           Check-in saved.{" "}
           <button
@@ -1278,7 +1286,7 @@ function CheckInForm({
   }
 
   return (
-    <div className="border-t border-[#f0eeee] bg-[#f7f5f4] px-8 py-6">
+    <div className="border-t border-[#f0eeee] bg-[#f4f6f9] px-8 py-6">
       <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
         This week's check-in
       </div>
@@ -1292,7 +1300,7 @@ function CheckInForm({
           onChange={(e) => setLearning(e.target.value)}
           placeholder="One honest observation about what the experiment revealed."
           rows={3}
-          className="w-full resize-none rounded-[8px] border border-[#e4e0de] bg-white px-4 py-3 text-[14px] font-medium leading-relaxed text-[#07122f] outline-none transition-colors focus:border-[#24bf7a]"
+          className="w-full resize-none rounded-[12px] border border-[#e4e0de] bg-white px-4 py-3 text-[14px] font-medium leading-relaxed text-[#07122f] outline-none transition-colors focus:border-[#24bf7a]"
         />
       </label>
 
@@ -1330,7 +1338,7 @@ function CheckInForm({
               key={opt.value}
               onClick={() => setDecision(opt.value)}
               className={
-                "rounded-[8px] px-4 py-2 text-[13px] font-bold transition-colors " +
+                "rounded-[12px] px-4 py-2 text-[13px] font-bold transition-colors " +
                 (decision === opt.value ? opt.active : opt.inactive)
               }
             >
@@ -1344,7 +1352,7 @@ function CheckInForm({
         <button
           onClick={handleSubmit}
           disabled={!learning.trim() || !decision}
-          className="rounded-[8px] bg-[#07122f] px-6 py-2.5 text-[13px] font-bold tracking-wide text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+          className="rounded-[12px] bg-[#07122f] px-6 py-2.5 text-[13px] font-bold tracking-wide text-white transition-opacity hover:opacity-90 disabled:opacity-40"
         >
           Save check-in
         </button>

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
-import { AppShell, PageHeader } from "@/components/app-shell";
+import { AppShell } from "@/components/app-shell";
 import {
   usePendingIdea,
   useIdeas,
@@ -98,7 +98,9 @@ function ExperimentCardPage() {
   if (evaluating) {
     return (
       <AppShell teamMode>
-        <EvaluatingState />
+        <div className="min-h-screen bg-[#f4f6f9]">
+          <EvaluatingState />
+        </div>
       </AppShell>
     );
   }
@@ -126,83 +128,93 @@ function ExperimentCardPage() {
 
   return (
     <AppShell teamMode>
-      <PageHeader
-        eyebrow="Team · Step 02 · Experiment card"
-        title="This is not a business case. This is a bet worth taking."
-        teamStyle
-      />
-
-      <section className="mx-auto max-w-[1240px] px-8">
-        <div className="grid grid-cols-12 gap-10">
-          <div className="col-span-12 lg:col-span-8 lg:col-start-3">
-            {/* Mentor Verdict */}
-            {evaluation && <MentorVerdictBlock evaluation={evaluation} />}
-
-            {/* Card */}
-            <div
-              className={`border border-dashed border-border bg-card ${evaluation ? "mt-10" : ""}`}
-            >
-              {/* Card header */}
-              <div className="border-b border-border px-10 py-8">
-                <div className="eyebrow mb-2">Experiment Card</div>
-                <p className="font-serif text-[28px] leading-snug">{data.problem}</p>
-                <p className="mt-2 text-[14px] text-muted-foreground">Affects: {data.whoHasIt}</p>
+      <div className="min-h-screen bg-[#f4f6f9]">
+        <div className="mx-auto max-w-[1340px] px-6">
+          <div className="relative mb-8">
+            <div className="rounded-t-[16px] bg-[#07122f] p-6 text-white">
+              <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
+                Team · Step 02 · Experiment card
               </div>
+              <h1 className="max-w-[820px] font-sans text-[52px] font-black leading-[0.98] tracking-normal text-white md:text-[64px]">
+                This is not a business case. This is a bet worth taking.
+              </h1>
+            </div>
+            <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
+          </div>
+        </div>
 
-              {/* Card body */}
-              <div className="divide-y divide-border">
-                <Row label="The one-week experiment" value={data.experiment} />
-                <Row label="Willing to risk" value={data.willingToRisk} />
-                <div className="grid grid-cols-2 divide-x divide-border">
-                  <div className="px-8 py-6">
-                    <div className="eyebrow mb-2 text-primary">Go signal</div>
-                    <p className="text-[14px] leading-relaxed">{data.goSignal}</p>
-                  </div>
-                  <div className="px-8 py-6">
-                    <div className="eyebrow mb-2 text-destructive">Stop signal</div>
-                    <p className="text-[14px] leading-relaxed">{data.stopSignal}</p>
+        <section className="mx-auto max-w-[1240px] px-8">
+          <div className="grid grid-cols-12 gap-10">
+            <div className="col-span-12 lg:col-span-8 lg:col-start-3">
+              {/* Mentor Verdict */}
+              {evaluation && <MentorVerdictBlock evaluation={evaluation} />}
+
+              {/* Card */}
+              <div
+                className={`overflow-hidden rounded-[16px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] ${evaluation ? "mt-8" : ""}`}
+              >
+                {/* Card header */}
+                <div className="border-b border-[#f0eeee] px-10 py-8">
+                  <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">Experiment Card</div>
+                  <p className="font-sans text-[28px] font-bold leading-snug text-[#07122f]">{data.problem}</p>
+                  <p className="mt-2 text-[14px] font-medium text-[#697081]">Affects: {data.whoHasIt}</p>
+                </div>
+
+                {/* Card body */}
+                <div className="divide-y divide-[#f0eeee]">
+                  <Row label="The one-week experiment" value={data.experiment} />
+                  <Row label="Willing to risk" value={data.willingToRisk} />
+                  <div className="grid grid-cols-2">
+                    <div className="border-r border-[#f0eeee] px-8 py-6">
+                      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#08764c]">Go signal</div>
+                      <p className="text-[14px] leading-relaxed text-[#07122f]">{data.goSignal}</p>
+                    </div>
+                    <div className="px-8 py-6">
+                      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-red-600">Stop signal</div>
+                      <p className="text-[14px] leading-relaxed text-[#07122f]">{data.stopSignal}</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Submit to board */}
-            <div className="mt-8 border border-dashed border-border bg-card p-8">
-              <div className="eyebrow mb-4">Submit to Idea Board</div>
-              <p className="mb-6 text-[14px] text-muted-foreground">
-                Add your name so the team can see who's running this experiment.
-              </p>
-              <div className="flex gap-4">
-                <input
-                  type="text"
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                  placeholder="Your name & role — e.g. Alex P., Frontend Engineer"
-                  className="flex-1 border border-border bg-background px-4 py-3 text-[14px] text-foreground outline-none transition-colors focus:border-primary"
-                />
-                <button
-                  onClick={handleSubmit}
-                  disabled={!author.trim() || submitted}
-                  className="shrink-0 bg-primary px-6 py-3 text-[13px] font-medium tracking-wide text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+              {/* Submit to board */}
+              <div className="mt-6 rounded-[16px] bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+                <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">Submit to Idea Board</div>
+                <p className="mb-6 text-[14px] font-medium text-[#697081]">
+                  Add your name so the team can see who's running this experiment.
+                </p>
+                <div className="flex gap-4">
+                  <input
+                    type="text"
+                    value={author}
+                    onChange={(e) => setAuthor(e.target.value)}
+                    placeholder="Your name & role — e.g. Alex P., Frontend Engineer"
+                    className="flex-1 rounded-[12px] border border-[#e4e0de] bg-[#f4f6f9] px-4 py-3 text-[14px] font-medium text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
+                  />
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!author.trim() || submitted}
+                    className="shrink-0 rounded-[12px] bg-[#24bf7a] px-6 py-3 text-[13px] font-bold tracking-wide text-[#07122f] transition-opacity hover:opacity-90 disabled:opacity-40"
+                  >
+                    Submit to Idea Board →
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <Link
+                  to="/team"
+                  className="text-[13px] font-medium text-[#697081] underline-offset-4 hover:text-[#07122f] hover:underline"
                 >
-                  Submit to Idea Board →
-                </button>
+                  ← Edit answers
+                </Link>
               </div>
             </div>
-
-            <div className="mt-6">
-              <Link
-                to="/team"
-                className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                ← Edit answers
-              </Link>
-            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <div className="h-24" />
+        <div className="h-24" />
+      </div>
     </AppShell>
   );
 }
@@ -215,17 +227,17 @@ function EvaluatingState() {
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="h-1.5 w-1.5 rounded-full bg-primary"
+              className="h-1.5 w-1.5 rounded-full bg-[#24bf7a]"
               style={{
                 animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite`,
               }}
             />
           ))}
         </div>
-        <p className="font-serif text-[32px] leading-tight text-foreground">
+        <p className="font-sans text-[32px] font-black leading-tight text-[#07122f]">
           Evaluating your idea…
         </p>
-        <p className="mt-4 text-[14px] text-muted-foreground">
+        <p className="mt-4 text-[14px] font-medium text-[#697081]">
           A mentor is reviewing your experiment.
         </p>
       </div>
@@ -243,24 +255,24 @@ function MentorVerdictBlock({ evaluation }: { evaluation: MentorEvaluation }) {
   const verdictConfig = {
     pursue: {
       label: "Pursue",
-      textColor: "text-primary",
-      borderColor: "border-primary",
-      bgColor: "bg-accent",
-      dotColor: "bg-primary",
+      textColor: "text-[#08764c]",
+      borderColor: "border-[#24bf7a]",
+      bgColor: "bg-[#f0fdf6]",
+      dotColor: "bg-[#24bf7a]",
     },
     pause: {
       label: "Pause",
       textColor: "text-amber-600",
       borderColor: "border-amber-500/40",
-      bgColor: "bg-amber-50/60",
+      bgColor: "bg-amber-50/80",
       dotColor: "bg-amber-500",
     },
     drop: {
       label: "Drop",
-      textColor: "text-destructive",
-      borderColor: "border-destructive/30",
-      bgColor: "bg-destructive/5",
-      dotColor: "bg-destructive",
+      textColor: "text-red-600",
+      borderColor: "border-red-400/40",
+      bgColor: "bg-red-50/80",
+      dotColor: "bg-red-600",
     },
   }[evaluation.verdict];
 
@@ -280,12 +292,12 @@ function MentorVerdictBlock({ evaluation }: { evaluation: MentorEvaluation }) {
   const quality = qualityConfig[evaluation.experimentQuality];
 
   return (
-    <div className={`border ${verdictConfig.borderColor} ${verdictConfig.bgColor}`}>
+    <div className={`overflow-hidden rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] ${verdictConfig.bgColor}`}>
       {/* Verdict header */}
-      <div className="border-b border-border/50 px-10 py-8">
-        <div className="eyebrow mb-4">Mentor Verdict</div>
+      <div className="border-b border-black/5 px-10 py-8">
+        <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">Mentor Verdict</div>
         <div className="flex items-baseline gap-4">
-          <span className={`font-serif text-[52px] leading-none ${verdictConfig.textColor}`}>
+          <span className={`font-sans text-[52px] font-black leading-none ${verdictConfig.textColor}`}>
             {verdictConfig.label}
           </span>
           <span
@@ -293,27 +305,27 @@ function MentorVerdictBlock({ evaluation }: { evaluation: MentorEvaluation }) {
             aria-hidden
           />
         </div>
-        <p className="mt-3 font-serif text-[18px] leading-snug text-foreground/80 italic">
+        <p className="mt-3 text-[18px] font-medium leading-snug text-[#07122f]/80 italic">
           {evaluation.verdictReason}
         </p>
       </div>
 
       {/* Signal rows */}
-      <div className="divide-y divide-border/40 px-10 py-2">
+      <div className="divide-y divide-black/5 px-10 py-2">
         <SignalRow label="Problem strength" value={strength.label} valueColor={strength.color} />
         <SignalRow label="Experiment quality" value={quality.label} valueColor={quality.color} />
         <SignalRow
           label="Biggest blindspot"
           value={evaluation.biggestBlindspot}
-          valueColor="text-foreground"
+          valueColor="text-[#07122f]"
         />
       </div>
 
       {/* Mentor note pull quote */}
-      <div className="border-t border-border/50 px-10 py-8">
-        <div className="eyebrow mb-4">Mentor note</div>
-        <div className="inline-block bg-amber-50 px-5 py-4 border border-amber-200/60 shadow-sm">
-          <p className="font-serif text-[16px] leading-relaxed text-foreground">
+      <div className="border-t border-black/5 px-10 py-8">
+        <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">Mentor note</div>
+        <div className="rounded-[12px] bg-amber-50 px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
+          <p className="text-[16px] font-medium leading-relaxed text-[#07122f]">
             {evaluation.mentorNote}
           </p>
         </div>
@@ -344,8 +356,8 @@ function SignalRow({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-8 py-6">
-      <div className="eyebrow mb-2">{label}</div>
-      <p className="text-[15px] leading-relaxed">{value}</p>
+      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">{label}</div>
+      <p className="text-[15px] font-medium leading-relaxed text-[#07122f]">{value}</p>
     </div>
   );
 }
