@@ -11,6 +11,7 @@ import {
   type TeamCheckIn,
   type MentorEvaluation,
 } from "@/lib/team-store";
+import { downloadManagerBriefPdf } from "@/lib/manager-brief-pdf";
 
 export const Route = createFileRoute("/idea-board")({
   head: () => ({
@@ -64,10 +65,7 @@ function IdeaBoardPage() {
           <TabButton active={activeTab === "all"} onClick={() => setActiveTab("all")}>
             All experiments
           </TabButton>
-          <TabButton
-            active={activeTab === "matches"}
-            onClick={() => setActiveTab("matches")}
-          >
+          <TabButton active={activeTab === "matches"} onClick={() => setActiveTab("matches")}>
             Idea Matches
             <span className="ml-2 inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-400/30 font-mono text-[10px] text-amber-700">
               1
@@ -95,12 +93,8 @@ function IdeaBoardPage() {
                     idea={idea}
                     hasSimilar={SIMILAR_IDS.has(idea.id)}
                     expanded={expandedId === idea.id}
-                    onToggle={() =>
-                      setExpandedId(expandedId === idea.id ? null : idea.id)
-                    }
-                    onCheckIn={(checkIn, newStatus) =>
-                      addCheckIn(idea.id, checkIn, newStatus)
-                    }
+                    onToggle={() => setExpandedId(expandedId === idea.id ? null : idea.id)}
+                    onCheckIn={(checkIn, newStatus) => addCheckIn(idea.id, checkIn, newStatus)}
                   />
                 ))}
               </div>
@@ -159,13 +153,7 @@ function TabButton({
   );
 }
 
-function IdeaMatchesTab({
-  ideas,
-  onConnect,
-}: {
-  ideas: IdeaCard[];
-  onConnect: () => void;
-}) {
+function IdeaMatchesTab({ ideas, onConnect }: { ideas: IdeaCard[]; onConnect: () => void }) {
   const lena = ideas.find((i) => i.id === "mock-1");
   const jonas = ideas.find((i) => i.id === "mock-2");
 
@@ -215,10 +203,10 @@ function IdeaMatchesTab({
             AI insight
           </div>
           <p className="text-[13px] leading-relaxed text-foreground">
-            These experiments are testing the same hypothesis from different angles — alert
-            noise vs. metric noise. Running them in parallel risks duplication. Consider:
-            one team owns the problem, the other contributes findings. Suggested owner:
-            whoever has more on-call exposure.
+            These experiments are testing the same hypothesis from different angles — alert noise
+            vs. metric noise. Running them in parallel risks duplication. Consider: one team owns
+            the problem, the other contributes findings. Suggested owner: whoever has more on-call
+            exposure.
           </p>
         </div>
 
@@ -240,9 +228,7 @@ function MatchIdeaSummary({ idea }: { idea: IdeaCard }) {
   return (
     <div className="px-8 py-6">
       <p className="mb-1 text-[11px] text-muted-foreground">{idea.author}</p>
-      <p className="mb-3 text-[14px] font-medium leading-snug text-foreground">
-        {idea.problem}
-      </p>
+      <p className="mb-3 text-[14px] font-medium leading-snug text-foreground">{idea.problem}</p>
       <p className="text-[12px] leading-relaxed text-muted-foreground">
         <span className="font-mono text-[10px] uppercase tracking-wider text-foreground/60">
           Experiment:{" "}
@@ -266,6 +252,8 @@ function IdeaRow({
   onToggle: () => void;
   onCheckIn: (checkIn: TeamCheckIn, newStatus: string) => void;
 }) {
+  const canCreateManagerBrief = idea.mentorEvaluation?.verdict === "pursue";
+
   return (
     <div className="border border-dashed border-border bg-card">
       {/* Summary row */}
@@ -273,15 +261,12 @@ function IdeaRow({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2 flex-wrap">
             <span
-              className={
-                "h-1.5 w-1.5 shrink-0 rounded-full " + getStatusDotColor(idea.status)
-              }
+              className={"h-1.5 w-1.5 shrink-0 rounded-full " + getStatusDotColor(idea.status)}
               aria-hidden
             />
             <span
               className={
-                "font-mono text-[11px] uppercase tracking-wider " +
-                getStatusColor(idea.status)
+                "font-mono text-[11px] uppercase tracking-wider " + getStatusColor(idea.status)
               }
             >
               {idea.status}
@@ -290,17 +275,11 @@ function IdeaRow({
               · {idea.checkIns.length} check-in{idea.checkIns.length !== 1 ? "s" : ""}
             </span>
             {hasSimilar && (
-              <span className="font-mono text-[10px] text-amber-600">
-                · Similar idea on board
-              </span>
+              <span className="font-mono text-[10px] text-amber-600">· Similar idea on board</span>
             )}
-            {idea.mentorEvaluation && (
-              <VerdictBadge verdict={idea.mentorEvaluation.verdict} />
-            )}
+            {idea.mentorEvaluation && <VerdictBadge verdict={idea.mentorEvaluation.verdict} />}
           </div>
-          <p className="text-[15px] font-medium leading-snug text-foreground">
-            {idea.problem}
-          </p>
+          <p className="text-[15px] font-medium leading-snug text-foreground">{idea.problem}</p>
           <p className="mt-1 text-[12px] text-muted-foreground">{idea.author}</p>
         </div>
         <button
@@ -322,17 +301,32 @@ function IdeaRow({
           <div className="grid grid-cols-2 divide-x divide-border border-t border-border">
             <div className="px-8 py-5">
               <div className="eyebrow mb-1 text-primary">Go signal</div>
-              <p className="text-[13px] leading-relaxed text-foreground">
-                {idea.goSignal}
-              </p>
+              <p className="text-[13px] leading-relaxed text-foreground">{idea.goSignal}</p>
             </div>
             <div className="px-8 py-5">
               <div className="eyebrow mb-1 text-destructive">Stop signal</div>
-              <p className="text-[13px] leading-relaxed text-foreground">
-                {idea.stopSignal}
-              </p>
+              <p className="text-[13px] leading-relaxed text-foreground">{idea.stopSignal}</p>
             </div>
           </div>
+
+          {canCreateManagerBrief && (
+            <div className="border-t border-border bg-primary/5 px-8 py-5">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="eyebrow mb-1 text-primary">Manager handoff</div>
+                  <p className="text-[13px] leading-relaxed text-muted-foreground">
+                    Create a pilot brief that answers the nine manager intake questions.
+                  </p>
+                </div>
+                <button
+                  onClick={() => downloadManagerBriefPdf(idea)}
+                  className="shrink-0 border border-primary/40 bg-card px-5 py-2.5 font-mono text-[11px] uppercase tracking-wider text-primary transition-colors hover:bg-accent"
+                >
+                  Download manager brief PDF
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Check-in history */}
           {idea.checkIns.length > 0 && (
@@ -480,17 +474,39 @@ function CheckInForm({
         <div className="flex gap-2">
           {(
             [
-              { value: "continue" as const, label: "Continue →", active: "bg-primary text-primary-foreground", inactive: "border-border text-foreground hover:border-foreground/60" },
-              { value: "pause" as const, label: "Pause ⏸", active: "bg-amber-500 text-white", inactive: "border-border text-foreground hover:border-foreground/60" },
-              { value: "stop" as const, label: "Stop ✕", active: "bg-destructive text-destructive-foreground", inactive: "border-border text-foreground hover:border-foreground/60" },
-            ] satisfies { value: TeamCheckIn["decision"]; label: string; active: string; inactive: string }[]
+              {
+                value: "continue" as const,
+                label: "Continue →",
+                active: "bg-primary text-primary-foreground",
+                inactive: "border-border text-foreground hover:border-foreground/60",
+              },
+              {
+                value: "pause" as const,
+                label: "Pause ⏸",
+                active: "bg-amber-500 text-white",
+                inactive: "border-border text-foreground hover:border-foreground/60",
+              },
+              {
+                value: "stop" as const,
+                label: "Stop ✕",
+                active: "bg-destructive text-destructive-foreground",
+                inactive: "border-border text-foreground hover:border-foreground/60",
+              },
+            ] satisfies {
+              value: TeamCheckIn["decision"];
+              label: string;
+              active: string;
+              inactive: string;
+            }[]
           ).map((opt) => (
             <button
               key={opt.value}
               onClick={() => setDecision(opt.value)}
               className={
                 "border px-4 py-2 text-[13px] font-medium transition-colors " +
-                (decision === opt.value ? opt.active + " border-transparent" : "border " + opt.inactive)
+                (decision === opt.value
+                  ? opt.active + " border-transparent"
+                  : "border " + opt.inactive)
               }
             >
               {opt.label}
