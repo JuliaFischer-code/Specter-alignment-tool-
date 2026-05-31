@@ -432,9 +432,11 @@ function SpecterLanding({
   onEnterEngineer: () => void;
 }) {
   const [phase, setPhase] = useState<'idle' | 'collapsing' | 'selecting'>('idle');
+  const clickedRef = useRef(false);
 
   function handleClick() {
-    if (phase !== 'idle') return;
+    if (clickedRef.current) return;
+    clickedRef.current = true;
     setPhase('collapsing');
     window.setTimeout(() => setPhase('selecting'), 1000);
   }
@@ -450,7 +452,7 @@ function SpecterLanding({
         overflow: 'hidden', userSelect: 'none',
         cursor: isSelecting ? 'default' : 'pointer',
       }}
-      onClick={!isSelecting ? handleClick : undefined}
+      onClick={handleClick}
     >
       <style>{BH_CSS}</style>
 
@@ -495,6 +497,7 @@ function SpecterLanding({
           width: 'clamp(220px,28vw,400px)', height: 'clamp(120px,18vh,240px)',
           background: '#000', borderRadius: '50%', zIndex: 50,
           animation: 'bhExpand 800ms ease-in forwards',
+          pointerEvents: 'none',
         }} />
       )}
 
