@@ -394,6 +394,16 @@ function Index() {
 const BH_CSS = `
   @keyframes bhRingCW  { to { transform: rotate( 360deg); } }
   @keyframes bhRingCCW { to { transform: rotate(-360deg); } }
+  .mode-card {
+    position: relative;
+    overflow: visible;
+    border: 1px solid rgba(34,197,94,0.3);
+    transition: transform 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .mode-card:hover {
+    border-color: rgba(34,197,94,1.0);
+    box-shadow: 0 0 12px rgba(34,197,94,0.6), 0 0 30px rgba(34,197,94,0.25);
+  }
   @keyframes bhGridPulse {
     0%, 100% { opacity: 0.28; }
     50%       { opacity: 0.40; }
@@ -555,10 +565,10 @@ function SpecterLanding({
             onClick={(e) => { e.stopPropagation(); onEnterManager(); }}
           />
           <ModeCard
-            label="ENGINEER" labelColor="rgba(255,255,255,0.5)"
+            label="ENGINEER" labelColor="#22c55e"
             title="Experiment series"
             description="Shape a small bet, test the evidence, and decide whether the idea deserves a handoff."
-            cta="ENTER ENGINEER FLOW →" ctaColor="#ffffff"
+            cta="ENTER ENGINEER FLOW →" ctaColor="#22c55e"
             border="rgba(255,255,255,0.08)" hoverBorder="rgba(255,255,255,0.28)"
             onClick={(e) => { e.stopPropagation(); onEnterEngineer(); }}
           />
@@ -581,13 +591,12 @@ function ModeCard({
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      className="mode-card"
       style={{
         background: 'rgba(255,255,255,0.04)',
-        border: `1px solid ${hovered ? hoverBorder : border}`,
         borderRadius: '12px', padding: '32px', textAlign: 'left',
         cursor: 'pointer', color: '#fff',
         transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
-        transition: 'transform 0.2s ease, border-color 0.2s ease',
         backdropFilter: 'blur(8px)',
       }}
     >

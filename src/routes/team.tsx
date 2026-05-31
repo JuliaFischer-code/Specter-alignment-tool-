@@ -393,7 +393,7 @@ function BetSignalPanel({
   ];
 
   return (
-    <div className="px-1 pt-0">
+    <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
       <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
         <Lightbulb className="h-4 w-4 text-[#24bf7a]" />
         Bet signal
