@@ -258,51 +258,48 @@ function Index() {
             }}
           >
             <div className="mb-6 rounded-[16px] bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.10)]">
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-[1fr_300px]">
-                <div>
-                  <div className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
-                    Question set
-                  </div>
-                  <ol className="space-y-1">
-                    {promptScript.map((p, i) => {
-                      const active = i === step;
-                      return (
-                        <li key={p.id}>
-                          <button
-                            onClick={() => {
-                              setStep(i);
-                              setShowAllQuestions(false);
-                            }}
-                            className={
-                              "group flex w-full items-start gap-3 rounded-[12px] px-4 py-3 text-left text-[13px] font-semibold transition-all " +
-                              (active
-                                ? "bg-[#f4f6f9] text-[#07122f]"
-                                : "text-[#697081] hover:bg-[#f4f6f9] hover:text-[#07122f]")
-                            }
-                          >
-                            <span className="w-6 shrink-0 font-mono text-[11px] text-[#08764c]">
-                              {String(i + 1).padStart(2, "0")}
-                            </span>
-                            <span className="flex-1 leading-snug">{p.question}</span>
-                            <span
-                              className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full transition-colors"
-                              style={{ backgroundColor: dotFill(i, p) }}
-                              aria-hidden
-                            />
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                </div>
-                <div className="border-t pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-0">
-                  <ManagerReadinessPanel
-                    coverage={coverage}
-                    readiness={readiness}
-                    missingCount={missingFromPdf.length}
-                    pdfFileName={pdfFileName}
-                  />
-                </div>
+              <div className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                Question set
+              </div>
+              <ol className="space-y-1">
+                {promptScript.map((p, i) => {
+                  const active = i === step;
+                  return (
+                    <li key={p.id}>
+                      <button
+                        onClick={() => {
+                          setStep(i);
+                          setShowAllQuestions(false);
+                        }}
+                        className={
+                          "group flex w-full items-start gap-3 rounded-[12px] px-4 py-3 text-left text-[13px] font-semibold transition-all " +
+                          (active
+                            ? "bg-[#f4f6f9] text-[#07122f]"
+                            : "text-[#697081] hover:bg-[#f4f6f9] hover:text-[#07122f]")
+                        }
+                      >
+                        <span className="w-6 shrink-0 font-mono text-[11px] text-[#08764c]">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <span className="flex-1 leading-snug">{p.question}</span>
+                        <span
+                          className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full transition-colors"
+                          style={{ backgroundColor: dotFill(i, p) }}
+                          aria-hidden
+                        />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+              <div className="mt-4 border-t pt-4">
+                <button
+                  onClick={loadSample}
+                  className="inline-flex items-center gap-2 rounded-[12px] bg-[#f4f6f9] px-3 py-2 text-[12px] font-bold text-[#07122f] hover:bg-[#dff5eb]"
+                >
+                  <Sparkles className="h-4 w-4 text-[#24bf7a]" />
+                  Load worked example
+                </button>
               </div>
             </div>
           </div>
@@ -366,18 +363,9 @@ function Index() {
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[65%_1fr]">
             {/* Main question card */}
             <div className="rounded-[16px] bg-white p-10 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-[#08764c]">
-                  Question {String(step + 1).padStart(2, "0")} / {total}
-                </span>
-                <button
-                  onClick={loadSample}
-                  className="inline-flex items-center gap-2 rounded-[12px] bg-[#f4f6f9] px-3 py-2 text-[12px] font-bold text-[#07122f] hover:bg-[#dff5eb]"
-                >
-                  <Sparkles className="h-4 w-4 text-[#24bf7a]" />
-                  Load worked example
-                </button>
-              </div>
+              <span className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-[#08764c]">
+                Question {String(step + 1).padStart(2, "0")} / {total}
+              </span>
 
               <h2 className="mt-6 font-sans text-[36px] font-black leading-[1.05] tracking-normal text-[#07122f]">
                 {current.question}
@@ -421,7 +409,13 @@ function Index() {
               </div>
             </div>
 
-            <CommitmentPreview answers={answers} readiness={readiness} />
+            <CommitmentPreview
+              answers={answers}
+              readiness={readiness}
+              coverage={coverage}
+              missingCount={missingFromPdf.length}
+              pdfFileName={pdfFileName}
+            />
           </div>
         </section>
       </div>
@@ -758,7 +752,19 @@ function ManagerReadinessPanel({
   );
 }
 
-function CommitmentPreview({ answers, readiness }: { answers: CommitmentData; readiness: number }) {
+function CommitmentPreview({
+  answers,
+  readiness,
+  coverage,
+  missingCount,
+  pdfFileName,
+}: {
+  answers: CommitmentData;
+  readiness: number;
+  coverage: number;
+  missingCount: number;
+  pdfFileName: string | null;
+}) {
   return (
     <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
       <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
@@ -778,6 +784,14 @@ function CommitmentPreview({ answers, readiness }: { answers: CommitmentData; re
           <PreviewLine label="Ceiling" value={answers.budgetCeiling} />
           <PreviewLine label="Readiness" value={`${readiness}%`} />
         </div>
+      </div>
+      <div className="mt-5">
+        <ManagerReadinessPanel
+          coverage={coverage}
+          readiness={readiness}
+          missingCount={missingCount}
+          pdfFileName={pdfFileName}
+        />
       </div>
     </div>
   );
