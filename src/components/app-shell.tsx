@@ -58,7 +58,7 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
             : "border-b border-border bg-background/90")
         }
       >
-        <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between px-8">
+        <div className="mx-auto flex h-16 max-w-[1340px] items-center justify-between px-6">
           <Link to="/" onClick={markIntroEntered} className="flex items-center gap-3">
             <SpecterMark small={!dashboardSkin} />
             <span
@@ -118,7 +118,7 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
         </div>
       </header>
       <div className={dashboardSkin ? "pt-6 pb-0" : "pt-16 pb-0"}>
-        <div className="mx-auto max-w-[1240px] px-8">
+        <div className="mx-auto max-w-[1340px] px-6">
           <div
             className={
               "flex w-fit items-center p-0.5 " +
@@ -161,7 +161,7 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
           dashboardSkin ? "mt-16 border-t border-[#e4e0de]" : "mt-24 border-t border-border"
         }
       >
-        <div className="mx-auto flex max-w-[1240px] items-center justify-between px-8 py-6 text-[12px] text-muted-foreground">
+        <div className="mx-auto flex max-w-[1340px] items-center justify-between px-6 py-6 text-[12px] text-muted-foreground">
           <span>Specter — Pilot Governance Platform</span>
           <span className="font-mono">v0.4 · Know where the line is</span>
         </div>

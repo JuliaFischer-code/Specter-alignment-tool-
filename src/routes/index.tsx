@@ -186,8 +186,8 @@ function Index() {
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3 self-end">
-                <ManagerHeroMetric label="Coverage" value={`${coverage}%`} />
                 <ManagerHeroMetric label="Questions" value={`${progress}/${total}`} />
+                <ManagerHeroMetric label="Coverage" value={`${coverage}%`} />
               </div>
             </div>
             <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
@@ -412,8 +412,8 @@ const BH_CSS = `
     transform: translateY(-4px);
   }
   .mode-card[data-variant="engineer"]:hover {
-    border-color: rgba(76,165,213,0.62);
-    box-shadow: 0 0 6px rgba(76,165,213,0.24), 0 0 24px rgba(36,191,122,0.12), 0 24px 80px rgba(0,0,0,0.32);
+    border-color: rgba(36,191,122,0.58);
+    box-shadow: 0 0 6px rgba(36,191,122,0.24), 0 0 24px rgba(36,191,122,0.14), 0 24px 80px rgba(0,0,0,0.32);
   }
   @keyframes bhTitleSuck {
     0%   { opacity: 1; transform: scale(1);    filter: blur(0px);  }
