@@ -113,7 +113,33 @@ function extractFirstNumber(value: string) {
   return match ? Number(match[0]) : null;
 }
 
-function getLimitProximity(original: string | undefined, current: string | undefined) {
+function getKillCriteriaProximity(current: string | undefined) {
+  const value = (current || "").toLowerCase();
+  if (!value.trim()) return null;
+
+  const mentionsStop =
+    /\b(triggered|met|violated|breached|crossed|hard stop|stop condition|kill criterion|missed real incident)\b/.test(
+      value,
+    );
+  const negated = /\b(no|none|not|without|keine|kein|nicht)\b/.test(value) && mentionsStop;
+  const triggered = mentionsStop && !negated;
+  const close =
+    /\b(close|near|proximity|risk|below|under|against|short of|needs evidence|warning)\b/.test(
+      value,
+    );
+
+  if (triggered) return { percent: 100, label: "Kill condition triggered" };
+  if (close) return { percent: 68, label: "Close to stop condition" };
+  return { percent: 32, label: "No stop condition triggered" };
+}
+
+function getLimitProximity(
+  original: string | undefined,
+  current: string | undefined,
+  key?: DimensionKey,
+) {
+  if (key === "killCriteria") return getKillCriteriaProximity(current);
+
   const originalNumber = extractFirstNumber(original || "");
   const currentNumber = extractFirstNumber(current || "");
 
@@ -366,13 +392,37 @@ function CheckInPage() {
           })),
         },
       });
-      setAnalysis(result);
+      const killProximity = getKillCriteriaProximity(currentValues.killCriteria);
+      const normalizedResult =
+        killProximity?.percent === 100
+          ? {
+              ...result,
+              dimensions: result.dimensions.map((dim) =>
+                dim.key === "killCriteria"
+                  ? {
+                      ...dim,
+                      verdict: "breach" as Status,
+                      driftSummary:
+                        dim.driftSummary ||
+                        "A documented stop condition appears to be triggered. Treat this as a breach.",
+                    }
+                  : dim,
+              ),
+              violatedKillCriteria:
+                result.violatedKillCriteria.length > 0
+                  ? result.violatedKillCriteria
+                  : ["Kill criteria proximity indicates a triggered stop condition."],
+              overallVerdict: "breach" as Status,
+            }
+          : result;
+
+      setAnalysis(normalizedResult);
       const next: Record<string, Status> = {};
-      for (const dim of result.dimensions) next[dim.key] = dim.verdict;
+      for (const dim of normalizedResult.dimensions) next[dim.key] = dim.verdict;
       const nextScores = { ...scores, ...next };
       setScores(nextScores);
       // Auto-save after AI analysis
-      handleSaveCheckIn(result.overallVerdict, nextScores);
+      handleSaveCheckIn(normalizedResult.overallVerdict, nextScores);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Analysis failed");
     } finally {
@@ -383,335 +433,339 @@ function CheckInPage() {
   return (
     <AppShell>
       <div className="min-h-screen bg-[#f4f6f9]">
-      <section className="mx-auto max-w-[1340px] px-6 py-8">
-        <div className="relative mb-8">
-        <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_360px]">
-          <div>
-            <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
-              Manager · Step 03 · Check-in
+        <section className="mx-auto max-w-[1340px] px-6 py-8">
+          <div className="relative mb-8">
+            <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_360px]">
+              <div>
+                <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
+                  Manager · Step 03 · Check-in
+                </div>
+                <h1 className="max-w-[860px] font-sans text-[48px] font-black leading-[1.02] tracking-normal text-white md:text-[64px]">
+                  Are we still inside the affordable-loss envelope?
+                </h1>
+                <p className="mt-5 max-w-[760px] text-[16px] leading-relaxed text-white/70">
+                  Score live pilot evidence against the original commitment and keep a timeline of
+                  every status shift for manager review.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 self-end">
+                <CheckHeroMetric label="Scored" value={`${completed}/${total}`} />
+                <CheckHeroMetric label="History" value={checkIns.length} />
+              </div>
             </div>
-            <h1 className="max-w-[860px] font-sans text-[48px] font-black leading-[1.02] tracking-normal text-white md:text-[64px]">
-              Are we still inside the affordable-loss envelope?
-            </h1>
-            <p className="mt-5 max-w-[760px] text-[16px] leading-relaxed text-white/70">
-              Score live pilot evidence against the original commitment and keep a timeline of every
-              status shift for manager review.
-            </p>
+            <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 self-end">
-            <CheckHeroMetric label="Scored" value={`${completed}/${total}`} />
-            <CheckHeroMetric label="History" value={checkIns.length} />
-          </div>
-        </div>
-        <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
-        </div>
+          <CheckInTimeline checkIns={checkIns} />
 
-        <CheckInTimeline checkIns={checkIns} />
-
-        <div className="grid grid-cols-12 gap-6">
-          {/* Verdict rail */}
-          <aside className="col-span-12 lg:col-span-4">
-            <div className="sticky top-8 rounded-[12px] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-              <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
-                <Activity className="h-4 w-4 text-[#24bf7a]" />
-                Review status
-              </div>
-              <div className="mt-4 flex items-center gap-3">
-                <span className={`h-3 w-3 ${verdict ? statusMeta[verdict].dot : "bg-[#d9d5d2]"}`} />
-                <span className="text-[34px] font-black leading-none text-[#07122f]">
-                  {verdict ? statusMeta[verdict].label : "Awaiting review"}
-                </span>
-              </div>
-              <p className="mt-4 text-[13px] font-medium leading-relaxed text-[#697081]">
-                {!verdict &&
-                  "Add current evidence and score the dimensions before Specter shows a management verdict."}
-                {verdict === "breach" &&
-                  "At least one dimension has crossed the line you drew at kickoff. Convene the sponsor before continuing."}
-                {verdict === "watch" &&
-                  "Nothing is breached, but signals are drifting. Bring this to the next steering review."}
-                {verdict === "on-track" &&
-                  "All scored dimensions remain inside the commitment envelope."}
-              </p>
-
-              <div className="mt-8 border-t border-[#e4e0de] pt-4">
-                <div className="flex items-baseline justify-between text-[12px] font-medium text-[#697081]">
-                  <span>Scored</span>
-                  <span className="font-bold text-[#07122f]">
-                    {completed}/{total}
+          <div className="grid grid-cols-12 gap-6">
+            {/* Verdict rail */}
+            <aside className="col-span-12 lg:col-span-4">
+              <div className="sticky top-8 rounded-[12px] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+                <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                  <Activity className="h-4 w-4 text-[#24bf7a]" />
+                  Review status
+                </div>
+                <div className="mt-4 flex items-center gap-3">
+                  <span
+                    className={`h-3 w-3 ${verdict ? statusMeta[verdict].dot : "bg-[#d9d5d2]"}`}
+                  />
+                  <span className="text-[34px] font-black leading-none text-[#07122f]">
+                    {verdict ? statusMeta[verdict].label : "Awaiting review"}
                   </span>
                 </div>
-                <div className="mt-2 flex gap-1">
-                  {dimensions.map((d) => (
-                    <div
-                      key={d.key}
-                      className={
-                        "h-1 flex-1 " +
-                        (scores[d.key] ? statusMeta[scores[d.key]].bar : "bg-border")
-                      }
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <Link
-                to="/commitment"
-                className="mt-8 inline-flex items-center gap-2 text-[12px] font-bold text-[#697081] underline-offset-4 hover:text-[#07122f] hover:underline"
-              >
-                <FileText className="h-4 w-4" />
-                Open the commitment document
-              </Link>
-
-              <button
-                onClick={handleAnalyze}
-                disabled={running}
-                className="mt-6 block w-full rounded-[12px] bg-[#07122f] px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-              >
-                {running
-                  ? "Analyzing…"
-                  : analysis
-                    ? "Re-run AI analysis"
-                    : "Run AI accountability review"}
-              </button>
-
-              <button
-                onClick={applyDemoCheckIn}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border border-[#dff5eb] bg-[#dff5eb] px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#c7efd9]"
-              >
-                <Sparkles className="h-4 w-4 text-[#08764c]" />
-                Load demo check-in
-              </button>
-
-              <button
-                onClick={() => handleSaveCheckIn()}
-                disabled={completed === 0}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border border-[#e4e0de] bg-white px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#dff5eb] disabled:opacity-30"
-              >
-                <Save className="h-4 w-4" />
-                {saved ? "Saved to history" : "Save check-in"}
-              </button>
-
-              {checkIns.length > 0 && (
-                <p className="mt-3 text-[12px] font-medium text-[#697081]">
-                  {checkIns.length} check-in{checkIns.length > 1 ? "s" : ""} recorded
-                  {latestCheckIn ? ` · Latest ${formatDate(latestCheckIn.createdAt)}` : ""}
+                <p className="mt-4 text-[13px] font-medium leading-relaxed text-[#697081]">
+                  {!verdict &&
+                    "Add current evidence and score the dimensions before Specter shows a management verdict."}
+                  {verdict === "breach" &&
+                    "At least one dimension has crossed the line you drew at kickoff. Convene the sponsor before continuing."}
+                  {verdict === "watch" &&
+                    "Nothing is breached, but signals are drifting. Bring this to the next steering review."}
+                  {verdict === "on-track" &&
+                    "All scored dimensions remain inside the commitment envelope."}
                 </p>
-              )}
 
-              {error && <p className="mt-3 text-[12px] text-destructive">{error}</p>}
-            </div>
-          </aside>
-
-          {/* Scoring */}
-          <div className="col-span-12 space-y-6 lg:col-span-8">
-            {dimensions.map((d, i) => {
-              const original = data[d.key];
-              const selfScore = scores[d.key];
-              const dimA = perDimAnalysis[d.key];
-              const proximity = getLimitProximity(original, currentValues[d.key]);
-
-              // Find last value from history for this dimension
-              const lastEntry = checkIns.length > 0 ? checkIns[checkIns.length - 1] : null;
-              const lastValue = lastEntry?.currentValues[d.key];
-
-              return (
-                <div
-                  key={d.key}
-                  className="rounded-[12px] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
-                >
-                  <div className="flex items-start justify-between gap-6">
-                    <div>
-                      <span className="font-mono text-[12px] font-bold text-[#08764c]">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <h3 className="mt-2 font-sans text-[26px] font-black leading-tight tracking-normal text-[#07122f]">
-                        {d.label}
-                      </h3>
-                      <p className="mt-1 text-[13px] font-medium text-[#697081]">{d.question}</p>
-                    </div>
-                    {selfScore && (
-                      <span
+                <div className="mt-8 border-t border-[#e4e0de] pt-4">
+                  <div className="flex items-baseline justify-between text-[12px] font-medium text-[#697081]">
+                    <span>Scored</span>
+                    <span className="font-bold text-[#07122f]">
+                      {completed}/{total}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex gap-1">
+                    {dimensions.map((d) => (
+                      <div
+                        key={d.key}
                         className={
-                          "shrink-0 rounded-[7px] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white " +
-                          statusMeta[selfScore].bar
+                          "h-1 flex-1 " +
+                          (scores[d.key] ? statusMeta[scores[d.key]].bar : "bg-border")
                         }
-                      >
-                        {statusMeta[selfScore].label}
-                      </span>
-                    )}
+                      />
+                    ))}
                   </div>
+                </div>
 
-                  <div className="mt-6 rounded-[12px] border-l-4 border-[#24bf7a] bg-[#f4f6f9] p-4">
-                    <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
-                      Original commitment
-                    </div>
-                    <p className="text-[14px] font-medium leading-relaxed text-[#07122f]">
-                      {original || (
-                        <span className="italic text-[#697081]">Not specified at kickoff</span>
-                      )}
-                    </p>
-                  </div>
+                <Link
+                  to="/commitment"
+                  className="mt-8 inline-flex items-center gap-2 text-[12px] font-bold text-[#697081] underline-offset-4 hover:text-[#07122f] hover:underline"
+                >
+                  <FileText className="h-4 w-4" />
+                  Open the commitment document
+                </Link>
 
-                  {lastValue && (
-                    <div className="mt-3 rounded-[12px] border-l-4 border-[#d9d5d2] bg-[#f4f6f9] p-4">
-                      <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
-                        Last check-in
-                      </div>
-                      <p className="text-[13px] font-medium text-[#697081]">
-                        {lastValue}
-                        <span className="ml-2 text-[11px]">
-                          · {formatDate(lastEntry!.createdAt)}
+                <button
+                  onClick={handleAnalyze}
+                  disabled={running}
+                  className="mt-6 block w-full rounded-[12px] bg-[#07122f] px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                >
+                  {running
+                    ? "Analyzing…"
+                    : analysis
+                      ? "Re-run AI analysis"
+                      : "Run AI accountability review"}
+                </button>
+
+                <button
+                  onClick={applyDemoCheckIn}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border border-[#dff5eb] bg-[#dff5eb] px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#c7efd9]"
+                >
+                  <Sparkles className="h-4 w-4 text-[#08764c]" />
+                  Load demo check-in
+                </button>
+
+                <button
+                  onClick={() => handleSaveCheckIn()}
+                  disabled={completed === 0}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border border-[#e4e0de] bg-white px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-[#07122f] transition-colors hover:bg-[#dff5eb] disabled:opacity-30"
+                >
+                  <Save className="h-4 w-4" />
+                  {saved ? "Saved to history" : "Save check-in"}
+                </button>
+
+                {checkIns.length > 0 && (
+                  <p className="mt-3 text-[12px] font-medium text-[#697081]">
+                    {checkIns.length} check-in{checkIns.length > 1 ? "s" : ""} recorded
+                    {latestCheckIn ? ` · Latest ${formatDate(latestCheckIn.createdAt)}` : ""}
+                  </p>
+                )}
+
+                {error && <p className="mt-3 text-[12px] text-destructive">{error}</p>}
+              </div>
+            </aside>
+
+            {/* Scoring */}
+            <div className="col-span-12 space-y-6 lg:col-span-8">
+              {dimensions.map((d, i) => {
+                const original = data[d.key];
+                const selfScore = scores[d.key];
+                const dimA = perDimAnalysis[d.key];
+                const proximity = getLimitProximity(original, currentValues[d.key], d.key);
+
+                // Find last value from history for this dimension
+                const lastEntry = checkIns.length > 0 ? checkIns[checkIns.length - 1] : null;
+                const lastValue = lastEntry?.currentValues[d.key];
+
+                return (
+                  <div
+                    key={d.key}
+                    className="rounded-[12px] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                  >
+                    <div className="flex items-start justify-between gap-6">
+                      <div>
+                        <span className="font-mono text-[12px] font-bold text-[#08764c]">
+                          {String(i + 1).padStart(2, "0")}
                         </span>
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="mt-3">
-                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
-                      Current value
-                    </label>
-                    <textarea
-                      value={currentValues[d.key] || ""}
-                      onChange={(e) => setCurrentValues((c) => ({ ...c, [d.key]: e.target.value }))}
-                      placeholder={d.hint}
-                      rows={2}
-                      className="w-full resize-none rounded-[12px] border border-[#e4e0de] bg-[#f4f6f9] p-3 text-[14px] font-medium text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
-                    />
-                  </div>
-
-                  {proximity && (
-                    <div className="mt-4 rounded-[12px] bg-[#f4f6f9] p-4">
-                      <div className="mb-2 flex items-center justify-between text-[12px] font-bold text-[#697081]">
-                        <span>Limit proximity</span>
-                        <span>
-                          {proximity.percent}% · {proximity.label}
-                        </span>
+                        <h3 className="mt-2 font-sans text-[26px] font-black leading-tight tracking-normal text-[#07122f]">
+                          {d.label}
+                        </h3>
+                        <p className="mt-1 text-[13px] font-medium text-[#697081]">{d.question}</p>
                       </div>
-                      <div className="h-3 overflow-hidden rounded-full bg-[#e4e0de]">
-                        <div
+                      {selfScore && (
+                        <span
                           className={
-                            "h-full rounded-full " +
-                            (proximity.percent >= 100
-                              ? "bg-red-600"
-                              : proximity.percent >= 75
-                                ? "bg-[#d79000]"
-                                : "bg-[#24bf7a]")
-                          }
-                          style={{ width: `${Math.min(100, proximity.percent)}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {dimA && (
-                    <div
-                      className={
-                        "mt-4 rounded-[12px] border-l-4 p-4 " +
-                        (dimA.verdict === "breach"
-                          ? "border-red-600 bg-red-50"
-                          : dimA.verdict === "watch"
-                            ? "border-[#d79000] bg-[#fff8e8]"
-                            : "border-[#24bf7a] bg-[#dff5eb]")
-                      }
-                    >
-                      <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#697081]">
-                        <Gauge className="h-4 w-4" />
-                        AI drift analysis
-                      </div>
-                      <p className="text-[14px] font-medium leading-relaxed text-[#07122f]">
-                        {dimA.driftSummary}
-                      </p>
-                    </div>
-                  )}
-
-                  <textarea
-                    value={notes[d.key] || ""}
-                    onChange={(e) => setNotes((n) => ({ ...n, [d.key]: e.target.value }))}
-                    placeholder="What changed since the last check-in? Evidence, anecdote, number."
-                    rows={3}
-                    className="mt-4 w-full resize-none rounded-[12px] border border-[#e4e0de] bg-[#f4f6f9] p-3 text-[14px] font-medium text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
-                  />
-
-                  <div className="mt-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
-                    Manager assessment
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {(Object.keys(statusMeta) as Status[]).map((s) => {
-                      const active = selfScore === s;
-                      return (
-                        <button
-                          key={s}
-                          onClick={() => setScores((prev) => ({ ...prev, [d.key]: s }))}
-                          className={
-                            "flex items-center gap-2 rounded-[12px] px-4 py-2 text-[12px] font-bold transition-colors " +
-                            (active
-                              ? "bg-[#07122f] text-white"
-                              : "bg-[#f4f6f9] text-[#07122f] hover:bg-[#dff5eb]")
+                            "shrink-0 rounded-[7px] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white " +
+                            statusMeta[selfScore].bar
                           }
                         >
-                          <span className={`h-2 w-2 ${statusMeta[s].dot}`} />
-                          {statusMeta[s].label}
-                        </button>
-                      );
-                    })}
+                          {statusMeta[selfScore].label}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-6 rounded-[12px] border-l-4 border-[#24bf7a] bg-[#f4f6f9] p-4">
+                      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                        Original commitment
+                      </div>
+                      <p className="text-[14px] font-medium leading-relaxed text-[#07122f]">
+                        {original || (
+                          <span className="italic text-[#697081]">Not specified at kickoff</span>
+                        )}
+                      </p>
+                    </div>
+
+                    {lastValue && (
+                      <div className="mt-3 rounded-[12px] border-l-4 border-[#d9d5d2] bg-[#f4f6f9] p-4">
+                        <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                          Last check-in
+                        </div>
+                        <p className="text-[13px] font-medium text-[#697081]">
+                          {lastValue}
+                          <span className="ml-2 text-[11px]">
+                            · {formatDate(lastEntry!.createdAt)}
+                          </span>
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="mt-3">
+                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                        Current value
+                      </label>
+                      <textarea
+                        value={currentValues[d.key] || ""}
+                        onChange={(e) =>
+                          setCurrentValues((c) => ({ ...c, [d.key]: e.target.value }))
+                        }
+                        placeholder={d.hint}
+                        rows={2}
+                        className="w-full resize-none rounded-[12px] border border-[#e4e0de] bg-[#f4f6f9] p-3 text-[14px] font-medium text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
+                      />
+                    </div>
+
+                    {proximity && (
+                      <div className="mt-4 rounded-[12px] bg-[#f4f6f9] p-4">
+                        <div className="mb-2 flex items-center justify-between text-[12px] font-bold text-[#697081]">
+                          <span>Limit proximity</span>
+                          <span>
+                            {proximity.percent}% · {proximity.label}
+                          </span>
+                        </div>
+                        <div className="h-3 overflow-hidden rounded-full bg-[#e4e0de]">
+                          <div
+                            className={
+                              "h-full rounded-full " +
+                              (proximity.percent >= 100
+                                ? "bg-red-600"
+                                : proximity.percent >= 75
+                                  ? "bg-[#d79000]"
+                                  : "bg-[#24bf7a]")
+                            }
+                            style={{ width: `${Math.min(100, proximity.percent)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {dimA && (
+                      <div
+                        className={
+                          "mt-4 rounded-[12px] border-l-4 p-4 " +
+                          (dimA.verdict === "breach"
+                            ? "border-red-600 bg-red-50"
+                            : dimA.verdict === "watch"
+                              ? "border-[#d79000] bg-[#fff8e8]"
+                              : "border-[#24bf7a] bg-[#dff5eb]")
+                        }
+                      >
+                        <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#697081]">
+                          <Gauge className="h-4 w-4" />
+                          AI drift analysis
+                        </div>
+                        <p className="text-[14px] font-medium leading-relaxed text-[#07122f]">
+                          {dimA.driftSummary}
+                        </p>
+                      </div>
+                    )}
+
+                    <textarea
+                      value={notes[d.key] || ""}
+                      onChange={(e) => setNotes((n) => ({ ...n, [d.key]: e.target.value }))}
+                      placeholder="What changed since the last check-in? Evidence, anecdote, number."
+                      rows={3}
+                      className="mt-4 w-full resize-none rounded-[12px] border border-[#e4e0de] bg-[#f4f6f9] p-3 text-[14px] font-medium text-[#07122f] outline-none transition-colors focus:border-[#24bf7a] focus:bg-white"
+                    />
+
+                    <div className="mt-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                      Manager assessment
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {(Object.keys(statusMeta) as Status[]).map((s) => {
+                        const active = selfScore === s;
+                        return (
+                          <button
+                            key={s}
+                            onClick={() => setScores((prev) => ({ ...prev, [d.key]: s }))}
+                            className={
+                              "flex items-center gap-2 rounded-[12px] px-4 py-2 text-[12px] font-bold transition-colors " +
+                              (active
+                                ? "bg-[#07122f] text-white"
+                                : "bg-[#f4f6f9] text-[#07122f] hover:bg-[#dff5eb]")
+                            }
+                          >
+                            <span className={`h-2 w-2 ${statusMeta[s].dot}`} />
+                            {statusMeta[s].label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {hasResults && (
-          <CheckInResultsDashboard
-            analysis={analysis}
-            currentValues={currentValues}
-            data={data}
-            scores={scores}
-          />
-        )}
-      </section>
-
-      {analysis && (
-        <section className="mx-auto mt-12 max-w-[1340px] px-6">
-          <div
-            className={
-              "rounded-[16px] bg-white p-8 shadow-[0_2px_8px_rgba(0,0,0,0.08)] ring-2 " +
-              (analysis.overallVerdict === "breach"
-                ? "ring-red-500"
-                : analysis.overallVerdict === "watch"
-                  ? "ring-[#d79000]"
-                  : "ring-[#24bf7a]")
-            }
-          >
-            <div className="mb-3 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
-              <AlertTriangle className="h-4 w-4 text-[#d79000]" />
-              Accountability response
+                );
+              })}
             </div>
-            <h2 className="font-sans text-[32px] font-black leading-tight tracking-normal text-[#07122f]">
-              {analysis.headline}
-            </h2>
-
-            {analysis.violatedKillCriteria.length > 0 && (
-              <div className="mt-6 rounded-[12px] bg-red-50 p-5">
-                <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-red-600">
-                  Violated kill criteria
-                </div>
-                <ul className="mt-3 list-disc space-y-2 pl-5 text-[14px] font-medium text-[#07122f]">
-                  {analysis.violatedKillCriteria.map((k, i) => (
-                    <li key={i}>{k}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <pre className="mt-6 whitespace-pre-wrap font-sans text-[15px] font-medium leading-relaxed text-[#07122f]">
-              {analysis.accountabilityResponse}
-            </pre>
           </div>
-        </section>
-      )}
 
-      <div className="h-24" />
+          {hasResults && (
+            <CheckInResultsDashboard
+              analysis={analysis}
+              currentValues={currentValues}
+              data={data}
+              scores={scores}
+            />
+          )}
+        </section>
+
+        {analysis && (
+          <section className="mx-auto mt-12 max-w-[1340px] px-6">
+            <div
+              className={
+                "rounded-[16px] bg-white p-8 shadow-[0_2px_8px_rgba(0,0,0,0.08)] ring-2 " +
+                (analysis.overallVerdict === "breach"
+                  ? "ring-red-500"
+                  : analysis.overallVerdict === "watch"
+                    ? "ring-[#d79000]"
+                    : "ring-[#24bf7a]")
+              }
+            >
+              <div className="mb-3 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                <AlertTriangle className="h-4 w-4 text-[#d79000]" />
+                Accountability response
+              </div>
+              <h2 className="font-sans text-[32px] font-black leading-tight tracking-normal text-[#07122f]">
+                {analysis.headline}
+              </h2>
+
+              {analysis.violatedKillCriteria.length > 0 && (
+                <div className="mt-6 rounded-[12px] bg-red-50 p-5">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-red-600">
+                    Violated kill criteria
+                  </div>
+                  <ul className="mt-3 list-disc space-y-2 pl-5 text-[14px] font-medium text-[#07122f]">
+                    {analysis.violatedKillCriteria.map((k, i) => (
+                      <li key={i}>{k}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <pre className="mt-6 whitespace-pre-wrap font-sans text-[15px] font-medium leading-relaxed text-[#07122f]">
+                {analysis.accountabilityResponse}
+              </pre>
+            </div>
+          </section>
+        )}
+
+        <div className="h-24" />
       </div>
     </AppShell>
   );
@@ -729,7 +783,7 @@ function CheckInResultsDashboard({
   scores: Record<string, Status>;
 }) {
   const riskRows = dimensions.map((d, index) => {
-    const proximity = getLimitProximity(data[d.key], currentValues[d.key]);
+    const proximity = getLimitProximity(data[d.key], currentValues[d.key], d.key);
     const risk = scoreToRisk(scores[d.key], proximity?.percent);
     return {
       ...d,
@@ -846,14 +900,16 @@ function CheckInResultsDashboard({
             {riskRows.map((row) => (
               <div
                 key={row.key}
-                className="absolute -translate-x-1/2 -translate-y-1/2"
+                className="group absolute -translate-x-1/2 -translate-y-1/2"
                 style={{ left: `${row.x}%`, top: `${row.y}%` }}
               >
                 <div
-                  className={`h-4 w-4 rounded-full border-2 border-white ${getRiskClass(row.risk)}`}
+                  className={`h-4 w-4 rounded-full border-2 border-white shadow-[0_0_0_4px_rgba(255,255,255,0.08)] transition-transform group-hover:scale-125 ${getRiskClass(row.risk)}`}
                 />
-                <div className="mt-1 whitespace-nowrap rounded-[6px] bg-white px-2 py-1 text-[10px] font-bold text-[#07122f] shadow-sm">
-                  {row.label.split(" ")[0]}
+                <div className="pointer-events-none absolute left-1/2 top-6 z-20 -translate-x-1/2 translate-y-1 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+                  <div className="whitespace-nowrap rounded-[8px] border border-white/20 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-[#07122f] shadow-[0_8px_24px_rgba(0,0,0,0.28)]">
+                    {row.label}
+                  </div>
                 </div>
               </div>
             ))}

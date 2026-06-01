@@ -52,6 +52,48 @@ function parseJsonObject(text: string): unknown {
   return JSON.parse(jsonText.slice(firstBrace, lastBrace + 1));
 }
 
+function isTriggeredKillCriterion(current: string) {
+  const value = current.toLowerCase();
+  const mentionsStop =
+    /\b(triggered|met|violated|breached|crossed|hard stop|stop condition|kill criterion|missed real incident)\b/.test(
+      value,
+    );
+  const negated = /\b(no|none|not|without|keine|kein|nicht)\b/.test(value) && mentionsStop;
+  return mentionsStop && !negated;
+}
+
+function normalizeFindings(parsed: CheckInAnalysis, dimensions: z.infer<typeof DimensionInput>[]) {
+  const killInput = dimensions.find((dimension) => dimension.key === "killCriteria");
+  const killTriggered = Boolean(killInput?.current && isTriggeredKillCriterion(killInput.current));
+  const dimensionHasBreach = parsed.dimensions.some((dimension) => dimension.verdict === "breach");
+  const violatedKillCriteria =
+    killTriggered && parsed.violatedKillCriteria.length === 0
+      ? ["A documented kill criterion appears to be triggered by the current check-in."]
+      : parsed.violatedKillCriteria;
+
+  const normalizedDimensions = parsed.dimensions.map((dimension) =>
+    dimension.key === "killCriteria" && (killTriggered || parsed.violatedKillCriteria.length > 0)
+      ? {
+          ...dimension,
+          verdict: "breach" as const,
+          driftSummary:
+            dimension.driftSummary ||
+            "A documented stop condition is now true. This is a breach, not a watch item.",
+        }
+      : dimension,
+  );
+
+  return {
+    ...parsed,
+    dimensions: normalizedDimensions,
+    violatedKillCriteria,
+    overallVerdict:
+      killTriggered || violatedKillCriteria.length > 0 || dimensionHasBreach
+        ? ("breach" as const)
+        : parsed.overallVerdict,
+  };
+}
+
 export const analyzeCheckIn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }): Promise<CheckInAnalysis> => {
@@ -117,7 +159,7 @@ Do not wrap the JSON in markdown. Include one dimensions entry for every input d
       console.dir(text, { depth: null });
 
       const parsed = FindingSchema.parse(parseJsonObject(text));
-      return parsed;
+      return normalizeFindings(parsed, data.dimensions);
     } catch (error) {
       console.error("CHECK-IN ERROR:", error);
 

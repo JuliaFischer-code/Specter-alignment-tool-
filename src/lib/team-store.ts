@@ -46,7 +46,7 @@ export const blankPendingIdea: PendingIdea = {
 const PENDING_KEY = "uncertainty-navigator/team-pending-v1";
 const PENDING_EVAL_KEY = "uncertainty-navigator/team-pending-eval-v1";
 const IDEAS_KEY = "uncertainty-navigator/team-ideas-v1";
-const SEEDED_KEY = "uncertainty-navigator/team-seeded-v3";
+const SEEDED_KEY = "uncertainty-navigator/team-seeded-v4";
 
 export const MOCK_IDEAS: IdeaCard[] = [
   {
@@ -90,13 +90,11 @@ export const MOCK_IDEAS: IdeaCard[] = [
   {
     id: "mock-2",
     author: "Jonas W., Site Reliability Engineer",
-    problem:
-      "Our monitoring dashboards have so many metrics that engineers ignore them entirely",
+    problem: "Our monitoring dashboards have so many metrics that engineers ignore them entirely",
     whoHasIt: "SRE team",
     experiment:
       "Hide all metrics below a relevance threshold for one week and see if incident response improves",
-    willingToRisk:
-      "Risk of missing a metric that matters — I'll stay on-call myself that week",
+    willingToRisk: "Risk of missing a metric that matters — I'll stay on-call myself that week",
     goSignal: "Mean time to detect incidents drops by 30%",
     stopSignal: "Any incident where a hidden metric was the first signal",
     status: "On track · Week 1",
@@ -115,8 +113,7 @@ export const MOCK_IDEAS: IdeaCard[] = [
       verdictReason: "Strong signal problem with clear metrics.",
       problemStrength: "strong",
       experimentQuality: "sharp",
-      biggestBlindspot:
-        "Relevance thresholds may be miscalibrated for rare but critical events.",
+      biggestBlindspot: "Relevance thresholds may be miscalibrated for rare but critical events.",
       mentorNote: "Bold call to hide metrics. The stop signal is unambiguous. Run it.",
     },
   },
@@ -126,12 +123,10 @@ export const MOCK_IDEAS: IdeaCard[] = [
     problem:
       "Design handoffs create a week of back-and-forth between design and engineering on every feature",
     whoHasIt: "Frontend engineers and designers",
-    experiment:
-      "Use an AI tool to auto-generate component specs from Figma files for one sprint",
+    experiment: "Use an AI tool to auto-generate component specs from Figma files for one sprint",
     willingToRisk: "One sprint's worth of slower delivery if it doesn't work",
     goSignal: "Handoff time drops from 5 days to 1 day",
-    stopSignal:
-      "Engineers spend more time fixing AI output than reading design files",
+    stopSignal: "Engineers spend more time fixing AI output than reading design files",
     status: "Watch · Week 3",
     checkIns: [
       {
@@ -164,8 +159,7 @@ export const MOCK_IDEAS: IdeaCard[] = [
       experimentQuality: "vague",
       biggestBlindspot:
         "AI accuracy varies widely by component complexity — one sprint may not reveal the full picture.",
-      mentorNote:
-        "Narrow the experiment to a specific component type before drawing conclusions.",
+      mentorNote: "Narrow the experiment to a specific component type before drawing conclusions.",
     },
   },
   {
@@ -204,8 +198,7 @@ export const MOCK_IDEAS: IdeaCard[] = [
       experimentQuality: "sharp",
       biggestBlindspot:
         "Slack pings can get ignored in noisy channels — consider a dedicated alert channel.",
-      mentorNote:
-        "This is a weekend build that could save hours weekly. Strong ROI. Keep going.",
+      mentorNote: "This is a weekend build that could save hours weekly. Strong ROI. Keep going.",
     },
   },
   {
@@ -235,10 +228,49 @@ export const MOCK_IDEAS: IdeaCard[] = [
       verdictReason: "High leverage if accuracy holds.",
       problemStrength: "strong",
       experimentQuality: "sharp",
-      biggestBlindspot:
-        "LLM may hallucinate for novel crash patterns it hasn't seen before.",
+      biggestBlindspot: "LLM may hallucinate for novel crash patterns it hasn't seen before.",
       mentorNote:
         "Track accuracy rigorously. If you hit 80%+ correct summaries, this is worth productizing.",
+    },
+  },
+  {
+    id: "mock-6",
+    author: "Maya P., Platform Engineer",
+    problem:
+      "Release notes are manually rewritten three times before customer-facing teams can use them",
+    whoHasIt: "Developer relations and customer success",
+    experiment:
+      "Use an LLM to turn merged pull requests into draft customer-facing release notes for one week",
+    willingToRisk: "Two afternoons and one customer-success review cycle",
+    goSignal: "80% of generated notes need only light edits before publishing",
+    stopSignal: "Any generated note claims a feature shipped when it did not",
+    status: "Stopped · Week 2",
+    checkIns: [
+      {
+        id: "mock-6-ci-1",
+        createdAt: "2026-05-17T09:00:00Z",
+        learning:
+          "Drafts were fast, but three notes overstated unreleased feature flags. Customer success had to manually verify every line.",
+        decision: "pause",
+      },
+      {
+        id: "mock-6-ci-2",
+        createdAt: "2026-05-24T09:00:00Z",
+        learning:
+          "A generated note claimed a feature was live for all customers when it was only enabled in staging. Stop signal triggered.",
+        decision: "stop",
+      },
+    ],
+    createdAt: "2026-05-10T08:00:00Z",
+    mentorEvaluation: {
+      verdict: "drop",
+      verdictReason: "The stop signal was triggered and the review cost erased the speed benefit.",
+      problemStrength: "strong",
+      experimentQuality: "sharp",
+      biggestBlindspot:
+        "Release-state truth needs deterministic source data before an LLM can safely summarize it.",
+      mentorNote:
+        "Stop this version. Revisit only after feature-flag state is wired into the source material.",
     },
   },
 ];
@@ -360,15 +392,10 @@ export function getStatusDotColor(status: string): string {
   return "bg-primary";
 }
 
-export function getNewStatus(
-  decision: TeamCheckIn["decision"],
-  createdAt: string,
-): string {
+export function getNewStatus(decision: TeamCheckIn["decision"], createdAt: string): string {
   const week = Math.max(
     1,
-    Math.ceil(
-      (Date.now() - new Date(createdAt).getTime()) / (7 * 24 * 60 * 60 * 1000),
-    ),
+    Math.ceil((Date.now() - new Date(createdAt).getTime()) / (7 * 24 * 60 * 60 * 1000)),
   );
   if (decision === "stop") return "Stopped";
   if (decision === "pause") return `Watch · Week ${week}`;

@@ -81,7 +81,10 @@ function IdeaBoardPage() {
                   <TabButton active={activeTab === "all"} onClick={() => setActiveTab("all")}>
                     All experiments
                   </TabButton>
-                  <TabButton active={activeTab === "matches"} onClick={() => setActiveTab("matches")}>
+                  <TabButton
+                    active={activeTab === "matches"}
+                    onClick={() => setActiveTab("matches")}
+                  >
                     Idea Matches
                     <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-[6px] bg-[#dff5eb] px-1.5 font-mono text-[10px] text-[#24bf7a]">
                       1
@@ -118,7 +121,9 @@ function IdeaBoardPage() {
                           hasSimilar={SIMILAR_IDS.has(idea.id)}
                           expanded={expandedId === idea.id}
                           onToggle={() => setExpandedId(expandedId === idea.id ? null : idea.id)}
-                          onCheckIn={(checkIn, newStatus) => addCheckIn(idea.id, checkIn, newStatus)}
+                          onCheckIn={(checkIn, newStatus) =>
+                            addCheckIn(idea.id, checkIn, newStatus)
+                          }
                         />
                       ))}
                     </div>
@@ -488,6 +493,24 @@ function PortfolioSnapshot({ ideas }: { ideas: IdeaCard[] }) {
             </div>
             <StackedBar segments={statusSegments} total={Math.max(1, total)} />
           </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-[180px_1fr]">
+            <OutcomeDonut pursue={pursue} pause={pause} drop={drop} total={Math.max(1, total)} />
+            <div className="rounded-[12px] bg-[#f4f6f9] p-4">
+              <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
+                Outcome ratio
+              </div>
+              <p className="mt-2 text-[13px] font-medium leading-relaxed text-[#697081]">
+                Shows how much of the current board is ready to hand off, paused for more evidence,
+                or stopped because the signal crossed the line.
+              </p>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <MiniVerdict label="Pursue" value={pursue} className="text-primary" />
+                <MiniVerdict label="Pause" value={pause} className="text-amber-600" />
+                <MiniVerdict label="Drop" value={drop} className="text-destructive" />
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 border-t border-[#f0eeee] p-0 md:grid-cols-[1fr_220px] md:border-l md:border-t-0 lg:grid-cols-1 lg:border-l-0 lg:border-t">
@@ -578,6 +601,47 @@ function StackedBar({
           />
         );
       })}
+    </div>
+  );
+}
+
+function OutcomeDonut({
+  pursue,
+  pause,
+  drop,
+  total,
+}: {
+  pursue: number;
+  pause: number;
+  drop: number;
+  total: number;
+}) {
+  const pursueDeg = (pursue / total) * 360;
+  const pauseDeg = (pause / total) * 360;
+  const dropDeg = (drop / total) * 360;
+  const readyRate = Math.round((pursue / total) * 100);
+
+  return (
+    <div className="flex items-center justify-center rounded-[12px] bg-[#f4f6f9] p-4">
+      <div
+        className="relative h-32 w-32 rounded-full"
+        style={{
+          background: `conic-gradient(#005c3b 0deg ${pursueDeg}deg, #d79000 ${pursueDeg}deg ${
+            pursueDeg + pauseDeg
+          }deg, #dc2626 ${pursueDeg + pauseDeg}deg ${
+            pursueDeg + pauseDeg + dropDeg
+          }deg, #e4e0de ${pursueDeg + pauseDeg + dropDeg}deg 360deg)`,
+        }}
+        role="img"
+        aria-label={`${readyRate}% of experiments are pursue-ready`}
+      >
+        <div className="absolute inset-4 flex flex-col items-center justify-center rounded-full bg-white">
+          <div className="text-[24px] font-black leading-none text-[#07122f]">{readyRate}%</div>
+          <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
+            ready
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
