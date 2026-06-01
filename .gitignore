@@ -32,6 +32,9 @@ dist-ssr
 
 # Local config
 *.local
+.claude/
+.vercel/
+.netlify/
 
 # OS files
 .DS_Store
