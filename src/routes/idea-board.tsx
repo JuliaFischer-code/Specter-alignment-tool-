@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { format } from "date-fns";
 import {
+  ArrowUp,
   BarChart3,
   ClipboardCheck,
   FileText,
@@ -93,9 +94,9 @@ function IdeaBoardPage() {
                 </div>
                 <Link
                   to="/team"
-                  className="inline-flex items-center justify-center gap-2 rounded-[12px] bg-[#24bf7a] px-4 py-2.5 text-[13px] font-semibold text-[#07122f] transition-transform hover:-translate-y-0.5"
+                  className="group inline-flex items-center justify-center gap-2 rounded-[12px] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#07122f] shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[9px_9px_28px_rgba(15,23,42,0.10),-9px_-9px_28px_rgba(255,255,255,0.82)]"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4 text-[#24bf7a] transition-transform duration-300 group-hover:-translate-x-1" />
                   Add experiment
                 </Link>
               </div>
@@ -142,6 +143,7 @@ function IdeaBoardPage() {
             Feature coming soon: team introductions
           </div>
         )}
+        <BackToTopButton />
       </div>
     </AppShell>
   );
@@ -216,6 +218,22 @@ function IdeaBoardSidebar({ ideas }: { ideas: IdeaCard[] }) {
         </div>
       </div>
     </aside>
+  );
+}
+
+function BackToTopButton() {
+  return (
+    <button
+      type="button"
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      aria-label="Back to top"
+      className="group fixed bottom-6 right-6 z-40 flex h-[50px] w-[50px] items-center justify-center overflow-hidden rounded-full border-0 bg-[#07122f] font-semibold text-white shadow-[0_0_0_4px_rgba(36,191,122,0.18),0_16px_36px_rgba(7,18,47,0.22)] transition-all duration-300 hover:w-[140px] hover:rounded-full hover:bg-[#24bf7a] hover:text-[#07122f]"
+    >
+      <ArrowUp className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-[200%]" />
+      <span className="absolute translate-y-5 text-[0px] font-bold transition-all duration-300 group-hover:translate-y-0 group-hover:text-[13px]">
+        Back to top
+      </span>
+    </button>
   );
 }
 
@@ -386,7 +404,7 @@ function ProgressStat({
   }[tone];
 
   return (
-    <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+    <div className="group rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[9px_9px_30px_rgba(15,23,42,0.10),-9px_-9px_30px_rgba(255,255,255,0.86)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
@@ -1115,10 +1133,10 @@ function ReadinessRadar({
   dimensions: ReadinessDimension[];
   compact?: boolean;
 }) {
-  const size = compact ? 180 : 220;
+  const size = compact ? 260 : 240;
   const center = size / 2;
-  const radius = compact ? 58 : 72;
-  const labelRadius = compact ? 78 : 96;
+  const radius = compact ? 72 : 78;
+  const labelRadius = compact ? 108 : 104;
   const shortLabels = dimensions.map((dimension) =>
     dimension.label
       .replace("Problem strength", "Problem")
@@ -1149,7 +1167,7 @@ function ReadinessRadar({
     <div className="flex justify-center">
       <svg
         viewBox={`0 0 ${size} ${size}`}
-        className={compact ? "h-[180px] w-[180px]" : "h-[220px] w-[220px]"}
+        className={compact ? "h-[260px] w-full max-w-[320px]" : "h-[240px] w-[240px]"}
         role="img"
         aria-label="Readiness radar chart"
       >
@@ -1180,7 +1198,7 @@ function ReadinessRadar({
                 y={labelPoint.y}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className="fill-muted-foreground font-mono text-[8px] uppercase tracking-wider"
+                className="fill-muted-foreground font-mono text-[9px] uppercase tracking-wider"
               >
                 {shortLabels[index]}
               </text>

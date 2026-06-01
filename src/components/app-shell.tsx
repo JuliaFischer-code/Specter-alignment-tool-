@@ -117,7 +117,7 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
           </nav>
         </div>
       </header>
-      <div className={dashboardSkin ? "pt-6 pb-0" : "pt-16 pb-0"}>
+      <div className={dashboardSkin ? "pt-6 pb-6" : "pt-16 pb-0"}>
         <div className="mx-auto max-w-[1340px] px-6">
           <div
             className={
