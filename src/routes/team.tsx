@@ -12,7 +12,7 @@ import {
   Target,
   TimerReset,
 } from "lucide-react";
-import { AppShell } from "@/components/app-shell";
+import { AppShell, FlipHeroMetric } from "@/components/app-shell";
 import { blankPendingIdea, savePendingIdea, type PendingIdea } from "@/lib/team-store";
 
 export const Route = createFileRoute("/team")({
@@ -151,9 +151,10 @@ function TeamPage() {
         <section className="mx-auto max-w-[1340px] px-6 py-8">
           {/* Hero banner */}
           <div className="relative mb-6">
-            <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_360px]">
+            <div className="specter-fluid-hero grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_360px]">
+              <div className="specter-fluid-hero-mist" />
               <div>
-                <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
+                <div className="action-title-shine mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
                   Team · Step 01 · Experiment studio
                 </div>
                 <h1 className="max-w-[820px] font-sans text-[52px] font-black leading-[0.98] tracking-normal text-white md:text-[72px]">
@@ -164,9 +165,13 @@ function TeamPage() {
                   stop signal, and risk boundary.
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-3 self-end">
-                <StudioMetric label="Answered" value={`${progress}/${total}`} />
-                <StudioMetric label="Readiness" value={`${readiness}%`} />
+              <div className="self-end xl:justify-self-end">
+                <FlipHeroMetric
+                  frontLabel="Answered"
+                  frontValue={`${progress}/${total}`}
+                  backLabel="Readiness"
+                  backValue={`${readiness}%`}
+                />
               </div>
             </div>
             <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />

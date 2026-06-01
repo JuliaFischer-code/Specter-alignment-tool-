@@ -77,7 +77,7 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
                   : "eyebrow ml-2 hidden md:inline"
               }
             >
-              Pilot Governance Platform
+              Pilot Signal Studio
             </span>
           </Link>
           <nav className="flex items-center gap-1">
@@ -162,7 +162,7 @@ export function AppShell({ children, teamMode }: { children: ReactNode; teamMode
         }
       >
         <div className="mx-auto flex max-w-[1340px] items-center justify-between px-6 py-6 text-[12px] text-muted-foreground">
-          <span>Specter — Pilot Governance Platform</span>
+          <span>Specter — Pilot Signal Studio</span>
           <span className="font-mono">v0.4 · Know where the line is</span>
         </div>
       </footer>
@@ -233,6 +233,51 @@ export function PageHeader({
       {lede && (
         <p className="mt-6 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">{lede}</p>
       )}
+    </div>
+  );
+}
+
+export function FlipHeroMetric({
+  frontLabel,
+  frontValue,
+  backLabel,
+  backValue,
+}: {
+  frontLabel: string;
+  frontValue: string | number;
+  backLabel: string;
+  backValue: string | number;
+}) {
+  return (
+    <div
+      className="specter-flip-card h-[112px] w-full min-w-[180px] sm:w-[210px]"
+      tabIndex={0}
+      role="group"
+      aria-label={`${frontLabel}: ${frontValue}. Hover or focus to see ${backLabel}: ${backValue}.`}
+    >
+      <div className="specter-flip-card-inner">
+        <div className="specter-flip-card-face bg-white p-4 text-[#07122f] shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          <div className="text-[34px] font-black leading-none">{frontValue}</div>
+          <div className="mt-2 text-[12px] font-bold uppercase tracking-[0.12em] text-[#8d93a1]">
+            {frontLabel}
+          </div>
+          <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
+            Hover for {backLabel}
+          </div>
+        </div>
+        <div className="specter-flip-card-face specter-flip-card-back bg-[#dff5eb] p-4 text-[#07122f] shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          <div className="text-[34px] font-black leading-none text-[#005b3d]">{backValue}</div>
+          <div className="mt-2 text-[12px] font-bold uppercase tracking-[0.12em] text-[#697081]">
+            {backLabel}
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/70">
+            <div
+              className="h-full rounded-full bg-[#24bf7a]"
+              style={{ width: typeof backValue === "string" ? backValue : `${backValue}%` }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

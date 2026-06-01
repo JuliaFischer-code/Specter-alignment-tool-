@@ -14,7 +14,7 @@ import {
   Sparkles,
   Timer,
 } from "lucide-react";
-import { AppShell } from "@/components/app-shell";
+import { AppShell, FlipHeroMetric } from "@/components/app-shell";
 import {
   blankCommitment,
   promptScript,
@@ -172,9 +172,10 @@ function Index() {
         <section className="mx-auto max-w-[1340px] px-6 py-8">
           {/* Hero banner */}
           <div className="relative mb-6">
-            <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_380px]">
+            <div className="specter-fluid-hero grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_380px]">
+              <div className="specter-fluid-hero-mist" />
               <div>
-                <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
+                <div className="action-title-shine mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
                   Manager · Step 01 · Commitment studio
                 </div>
                 <h1 className="max-w-[880px] font-sans text-[52px] font-black leading-[0.98] tracking-normal text-white md:text-[72px]">
@@ -185,9 +186,13 @@ function Index() {
                   time-box, kill criteria, and continuation signal.
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-3 self-end">
-                <ManagerHeroMetric label="Questions" value={`${progress}/${total}`} />
-                <ManagerHeroMetric label="Coverage" value={`${coverage}%`} />
+              <div className="self-end xl:justify-self-end">
+                <FlipHeroMetric
+                  frontLabel="Questions"
+                  frontValue={`${progress}/${total}`}
+                  backLabel="Coverage"
+                  backValue={`${coverage}%`}
+                />
               </div>
             </div>
             <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />

@@ -286,9 +286,10 @@ function DashboardHero({ ideas }: { ideas: IdeaCard[] }) {
   const checkedIn = ideas.reduce((sum, idea) => sum + idea.checkIns.length, 0);
 
   return (
-    <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_300px]">
-      <div>
-        <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
+    <div className="specter-fluid-hero grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_300px]">
+      <div className="specter-fluid-hero-mist" />
+      <div className="relative z-10">
+        <div className="action-title-shine mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
           Team · Step 02 · Idea board
         </div>
         <h1 className="max-w-[760px] font-sans text-[52px] font-black leading-[0.98] tracking-normal text-white md:text-[72px]">
@@ -300,7 +301,7 @@ function DashboardHero({ ideas }: { ideas: IdeaCard[] }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 self-end">
+      <div className="relative z-10 grid grid-cols-2 gap-3 self-end">
         <HeroStat label="Experiments" value={ideas.length} />
         <HeroStat label="Check-ins" value={checkedIn} />
       </div>

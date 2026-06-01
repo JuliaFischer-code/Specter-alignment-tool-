@@ -435,9 +435,10 @@ function CheckInPage() {
       <div className="min-h-screen bg-[#f4f6f9]">
         <section className="mx-auto max-w-[1340px] px-6 py-8">
           <div className="relative mb-8">
-            <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_360px]">
+            <div className="specter-fluid-hero grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_360px]">
+              <div className="specter-fluid-hero-mist" />
               <div>
-                <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
+                <div className="action-title-shine mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
                   Manager · Step 03 · Check-in
                 </div>
                 <h1 className="max-w-[860px] font-sans text-[48px] font-black leading-[1.02] tracking-normal text-white md:text-[64px]">

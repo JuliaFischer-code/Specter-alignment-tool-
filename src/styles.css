@@ -149,7 +149,10 @@
     font-feature-settings: "ss01", "cv11";
   }
 
-  h1, h2, h3, .font-serif {
+  h1,
+  h2,
+  h3,
+  .font-serif {
     font-family: var(--font-serif);
     letter-spacing: -0.01em;
   }
@@ -171,5 +174,187 @@
     font-size: 11px;
     letter-spacing: 0.1em;
     color: var(--color-primary);
+  }
+  .action-title-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .action-title-shine {
+    background-image: linear-gradient(
+      105deg,
+      #24bf7a 0%,
+      #24bf7a 34%,
+      #f7fffb 44%,
+      #7ee4b1 54%,
+      #24bf7a 66%,
+      #24bf7a 100%
+    );
+    background-size: 260% 100%;
+    background-position: 100% 50%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: actionTitleShine 4.8s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .action-title-shine {
+      animation: none;
+      background-position: 0 50%;
+    }
+  }
+  @keyframes actionTitleShine {
+    0% {
+      background-position: 120% 50%;
+    }
+    54% {
+      background-position: -80% 50%;
+    }
+    100% {
+      background-position: -80% 50%;
+    }
+  }
+  .specter-fluid-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, rgba(7, 18, 47, 0.04) 0%, rgba(7, 18, 47, 0.5) 100%),
+      radial-gradient(circle at 18% 18%, rgba(36, 191, 122, 0.12), transparent 34%),
+      linear-gradient(135deg, #07122f 0%, #0a1838 52%, #07122f 100%);
+  }
+  .specter-fluid-hero::before,
+  .specter-fluid-hero::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 9999px;
+    filter: blur(36px);
+    will-change: transform, opacity;
+  }
+  .specter-fluid-hero::before {
+    left: -12%;
+    top: -44%;
+    height: 142%;
+    width: 82%;
+    opacity: 0.58;
+    background: radial-gradient(
+      circle,
+      rgba(36, 191, 122, 0.34) 0%,
+      rgba(20, 111, 163, 0.3) 34%,
+      rgba(7, 18, 47, 0) 72%
+    );
+    animation: specterHeroFluidA 18s ease-in-out infinite;
+  }
+  .specter-fluid-hero::after {
+    right: -12%;
+    bottom: -60%;
+    height: 148%;
+    width: 80%;
+    opacity: 0.34;
+    background: radial-gradient(
+      circle,
+      rgba(48, 136, 190, 0.48) 0%,
+      rgba(23, 52, 93, 0.28) 42%,
+      transparent 74%
+    );
+    animation: specterHeroFluidB 24s ease-in-out infinite;
+  }
+  .specter-fluid-hero > * {
+    position: relative;
+    z-index: 1;
+  }
+  .specter-fluid-hero-mist {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      115deg,
+      rgba(36, 191, 122, 0.16) 0%,
+      rgba(21, 90, 142, 0.2) 32%,
+      rgba(7, 18, 47, 0.16) 58%,
+      rgba(42, 111, 167, 0.22) 100%
+    );
+    background-size: 220% 220%;
+    mix-blend-mode: screen;
+    animation: specterHeroMist 16s ease-in-out infinite;
+  }
+  .specter-flip-card {
+    perspective: 1000px;
+  }
+  .specter-flip-card-inner {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    transform-style: preserve-3d;
+    transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .specter-flip-card:hover .specter-flip-card-inner,
+  .specter-flip-card:focus-within .specter-flip-card-inner {
+    transform: rotateY(180deg);
+  }
+  .specter-flip-card-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 14px;
+    backface-visibility: hidden;
+  }
+  .specter-flip-card-back {
+    transform: rotateY(180deg);
+  }
+  @keyframes specterHeroFluidA {
+    0%,
+    100% {
+      transform: translate3d(-10%, -14%, 0) scale(1);
+      opacity: 0.58;
+    }
+    45% {
+      transform: translate3d(22%, 10%, 0) scale(1.14);
+      opacity: 0.68;
+    }
+    70% {
+      transform: translate3d(8%, 18%, 0) scale(0.98);
+      opacity: 0.48;
+    }
+  }
+  @keyframes specterHeroFluidB {
+    0%,
+    100% {
+      transform: translate3d(12%, 10%, 0) scale(1);
+      opacity: 0.34;
+    }
+    50% {
+      transform: translate3d(-18%, -8%, 0) scale(1.18);
+      opacity: 0.46;
+    }
+  }
+  @keyframes specterHeroMist {
+    0%,
+    100% {
+      background-position: 0% 50%;
+      opacity: 0.34;
+    }
+    50% {
+      background-position: 100% 50%;
+      opacity: 0.46;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .specter-fluid-hero::before,
+    .specter-fluid-hero::after,
+    .specter-fluid-hero-mist {
+      animation: none;
+    }
+    .specter-flip-card-inner {
+      transition: none;
+    }
+    .specter-flip-card:hover .specter-flip-card-inner,
+    .specter-flip-card:focus-within .specter-flip-card-inner {
+      transform: none;
+    }
   }
 }

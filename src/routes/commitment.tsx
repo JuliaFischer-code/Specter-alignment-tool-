@@ -92,142 +92,147 @@ function CommitmentPage() {
   return (
     <AppShell>
       <div className="min-h-screen bg-[#f4f6f9]">
-      <div className="mx-auto max-w-[1340px] px-6 py-8">
-        <div className="relative mb-8">
-        <div className="grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_420px]">
-          <div>
-            <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
-              Manager · Step 02 · Commitment
-            </div>
-            <h1 className="max-w-[780px] font-sans text-[52px] font-black leading-[0.98] tracking-normal text-white md:text-[72px]">
-              Pilot Commitment Document
-            </h1>
-            <p className="mt-5 max-w-[700px] text-[16px] leading-relaxed text-white/70">
-              The written affordable-loss envelope managers can review, print, and check against
-              throughout the pilot.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-3 self-end">
-            <CommitmentHeroMetric label="Check-ins" value={checkIns.length} />
-            <CommitmentHeroMetric
-              label="Latest"
-              value={latestCheckIn ? latestCheckIn.verdict : "New"}
-            />
-          </div>
-        </div>
-        <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
-        </div>
-
-        <div className="mb-6 flex flex-wrap gap-3">
-          <button
-            onClick={() => window.print()}
-            className="inline-flex items-center gap-2 rounded-[12px] bg-white px-4 py-2.5 text-[13px] font-bold text-[#07122f] shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:bg-[#f4f6f9]"
-          >
-            <Printer className="h-4 w-4" />
-            Print / Export PDF
-          </button>
-          <Link
-            to="/check-in"
-            className="inline-flex items-center gap-2 rounded-[12px] bg-[#24bf7a] px-4 py-2.5 text-[13px] font-bold text-[#07122f] shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:opacity-90"
-          >
-            Run check-in <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-
-        <article className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-          <aside className="space-y-5">
-            <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-              <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
-                <ShieldCheck className="h-4 w-4 text-[#24bf7a]" />
-                Envelope
-              </div>
-              <div className="space-y-3">
-                <CommitmentMeta icon={FileText} label="Document" value={docId} />
-                <CommitmentMeta icon={UserRound} label="Sponsor" value={data.sponsor || "—"} />
-                <CommitmentMeta icon={CalendarClock} label="Time-box" value={data.timeBox || "—"} />
-              </div>
-            </div>
-
-            <div className="rounded-[16px] bg-[#07122f] p-5 text-white shadow-[0_4px_20px_rgba(7,18,47,0.22)]">
-              <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-white/55">
-                Review status
-              </div>
-              <div className="mt-3 text-[38px] font-black leading-none">
-                {latestCheckIn ? latestCheckIn.verdict.replace("-", " ") : "Ready"}
-              </div>
-              <p className="mt-4 text-[13px] font-medium leading-relaxed text-white/65">
-                {latestCheckIn
-                  ? `Last checked ${created.toLocaleDateString("de-DE")}.`
-                  : "No check-in recorded yet."}
-              </p>
-            </div>
-          </aside>
-
-          <div className="rounded-[16px] bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.08)] lg:p-10">
-            {/* Doc header */}
-            <div className="grid grid-cols-12 gap-8 border-b border-[#e4e0de] pb-8">
-              <div className="col-span-12 md:col-span-7">
-                <div className="font-mono text-[12px] font-bold text-[#08764c]">{docId}</div>
-                <h2 className="mt-3 font-sans text-[40px] font-black leading-[1.05] tracking-normal text-[#07122f]">
-                  {data.pilotName || "Untitled pilot"}
-                </h2>
-                <p className="mt-3 max-w-xl text-[14px] font-medium leading-relaxed text-[#697081]">
-                  This document records the team's pre-commitment to an affordable loss. It
-                  supersedes informal expectations and is the reference used at every check-in.
+        <div className="mx-auto max-w-[1340px] px-6 py-8">
+          <div className="relative mb-8">
+            <div className="specter-fluid-hero grid grid-cols-1 gap-5 rounded-t-[16px] bg-[#07122f] p-6 text-white xl:grid-cols-[1fr_420px]">
+              <div className="specter-fluid-hero-mist" />
+              <div>
+                <div className="action-title-shine mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
+                  Manager · Step 02 · Commitment
+                </div>
+                <h1 className="max-w-[780px] font-sans text-[52px] font-black leading-[0.98] tracking-normal text-white md:text-[72px]">
+                  Pilot Commitment Document
+                </h1>
+                <p className="mt-5 max-w-[700px] text-[16px] leading-relaxed text-white/70">
+                  The written affordable-loss envelope managers can review, print, and check against
+                  throughout the pilot.
                 </p>
               </div>
-              <div className="col-span-12 space-y-4 text-[12px] md:col-span-5">
-                <Meta
-                  label="Issued"
-                  value={created.toLocaleDateString(undefined, {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+              <div className="grid grid-cols-2 gap-3 self-end">
+                <CommitmentHeroMetric label="Check-ins" value={checkIns.length} />
+                <CommitmentHeroMetric
+                  label="Latest"
+                  value={latestCheckIn ? latestCheckIn.verdict : "New"}
                 />
-                <Meta label="Sponsor" value={data.sponsor || "—"} />
-                <Meta label="Time-box" value={data.timeBox || "—"} />
-                <Meta label="Ceiling" value={data.budgetCeiling || "—"} />
               </div>
             </div>
+            <div className="h-10 bg-gradient-to-b from-[#07122f] to-[#f4f6f9]" />
+          </div>
 
-            {/* Body */}
-            <div className="mt-10 space-y-12">
-              {sections.map((s) => (
-                <section key={s.title}>
-                  <h3 className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#a1a6b3]">
-                    {s.title}
-                  </h3>
-                  <div className="mt-5 divide-y divide-[#e4e0de] rounded-[12px] bg-[#f4f6f9]">
-                    {s.fields.map((f) => (
-                      <div key={f.id} className="grid grid-cols-12 gap-6 py-5">
-                        <div className="col-span-12 md:col-span-3">
-                          <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
-                            {f.label}
+          <div className="mb-6 flex flex-wrap gap-3">
+            <button
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-2 rounded-[12px] bg-white px-4 py-2.5 text-[13px] font-bold text-[#07122f] shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:bg-[#f4f6f9]"
+            >
+              <Printer className="h-4 w-4" />
+              Print / Export PDF
+            </button>
+            <Link
+              to="/check-in"
+              className="inline-flex items-center gap-2 rounded-[12px] bg-[#24bf7a] px-4 py-2.5 text-[13px] font-bold text-[#07122f] shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:opacity-90"
+            >
+              Run check-in <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <article className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+            <aside className="space-y-5">
+              <div className="rounded-[12px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+                <div className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                  <ShieldCheck className="h-4 w-4 text-[#24bf7a]" />
+                  Envelope
+                </div>
+                <div className="space-y-3">
+                  <CommitmentMeta icon={FileText} label="Document" value={docId} />
+                  <CommitmentMeta icon={UserRound} label="Sponsor" value={data.sponsor || "—"} />
+                  <CommitmentMeta
+                    icon={CalendarClock}
+                    label="Time-box"
+                    value={data.timeBox || "—"}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-[16px] bg-[#07122f] p-5 text-white shadow-[0_4px_20px_rgba(7,18,47,0.22)]">
+                <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-white/55">
+                  Review status
+                </div>
+                <div className="mt-3 text-[38px] font-black leading-none">
+                  {latestCheckIn ? latestCheckIn.verdict.replace("-", " ") : "Ready"}
+                </div>
+                <p className="mt-4 text-[13px] font-medium leading-relaxed text-white/65">
+                  {latestCheckIn
+                    ? `Last checked ${created.toLocaleDateString("de-DE")}.`
+                    : "No check-in recorded yet."}
+                </p>
+              </div>
+            </aside>
+
+            <div className="rounded-[16px] bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.08)] lg:p-10">
+              {/* Doc header */}
+              <div className="grid grid-cols-12 gap-8 border-b border-[#e4e0de] pb-8">
+                <div className="col-span-12 md:col-span-7">
+                  <div className="font-mono text-[12px] font-bold text-[#08764c]">{docId}</div>
+                  <h2 className="mt-3 font-sans text-[40px] font-black leading-[1.05] tracking-normal text-[#07122f]">
+                    {data.pilotName || "Untitled pilot"}
+                  </h2>
+                  <p className="mt-3 max-w-xl text-[14px] font-medium leading-relaxed text-[#697081]">
+                    This document records the team's pre-commitment to an affordable loss. It
+                    supersedes informal expectations and is the reference used at every check-in.
+                  </p>
+                </div>
+                <div className="col-span-12 space-y-4 text-[12px] md:col-span-5">
+                  <Meta
+                    label="Issued"
+                    value={created.toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  />
+                  <Meta label="Sponsor" value={data.sponsor || "—"} />
+                  <Meta label="Time-box" value={data.timeBox || "—"} />
+                  <Meta label="Ceiling" value={data.budgetCeiling || "—"} />
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="mt-10 space-y-12">
+                {sections.map((s) => (
+                  <section key={s.title}>
+                    <h3 className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#a1a6b3]">
+                      {s.title}
+                    </h3>
+                    <div className="mt-5 divide-y divide-[#e4e0de] rounded-[12px] bg-[#f4f6f9]">
+                      {s.fields.map((f) => (
+                        <div key={f.id} className="grid grid-cols-12 gap-6 py-5">
+                          <div className="col-span-12 md:col-span-3">
+                            <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#a1a6b3]">
+                              {f.label}
+                            </div>
+                          </div>
+                          <div className="col-span-12 md:col-span-9">
+                            <p className="text-[15px] font-medium leading-relaxed text-[#07122f]">
+                              {data[f.id] || (
+                                <span className="italic text-[#697081]">Not specified</span>
+                              )}
+                            </p>
                           </div>
                         </div>
-                        <div className="col-span-12 md:col-span-9">
-                          <p className="text-[15px] font-medium leading-relaxed text-[#07122f]">
-                            {data[f.id] || (
-                              <span className="italic text-[#697081]">Not specified</span>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
 
-            {/* Signature */}
-            <div className="mt-16 grid grid-cols-1 gap-12 border-t border-[#e4e0de] pt-10 md:grid-cols-2">
-              <SignatureBlock label="Sponsor" name={data.sponsor} />
-              <SignatureBlock label="Pilot Lead" name="" />
+              {/* Signature */}
+              <div className="mt-16 grid grid-cols-1 gap-12 border-t border-[#e4e0de] pt-10 md:grid-cols-2">
+                <SignatureBlock label="Sponsor" name={data.sponsor} />
+                <SignatureBlock label="Pilot Lead" name="" />
+              </div>
             </div>
-          </div>
-        </article>
-      </div>
+          </article>
+        </div>
       </div>
     </AppShell>
   );

@@ -131,8 +131,9 @@ function ExperimentCardPage() {
       <div className="min-h-screen bg-[#f4f6f9]">
         <div className="mx-auto max-w-[1340px] px-6">
           <div className="relative mb-8">
-            <div className="rounded-t-[16px] bg-[#07122f] p-6 text-white">
-              <div className="mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
+            <div className="specter-fluid-hero rounded-t-[16px] bg-[#07122f] p-6 text-white">
+              <div className="specter-fluid-hero-mist" />
+              <div className="action-title-shine mb-4 inline-flex rounded-[8px] bg-white/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em] text-[#24bf7a]">
                 Team · Step 02 · Experiment card
               </div>
               <h1 className="max-w-[820px] font-sans text-[52px] font-black leading-[0.98] tracking-normal text-white md:text-[64px]">
@@ -155,9 +156,15 @@ function ExperimentCardPage() {
               >
                 {/* Card header */}
                 <div className="border-b border-[#f0eeee] px-10 py-8">
-                  <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">Experiment Card</div>
-                  <p className="font-sans text-[28px] font-bold leading-snug text-[#07122f]">{data.problem}</p>
-                  <p className="mt-2 text-[14px] font-medium text-[#697081]">Affects: {data.whoHasIt}</p>
+                  <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                    Experiment Card
+                  </div>
+                  <p className="font-sans text-[28px] font-bold leading-snug text-[#07122f]">
+                    {data.problem}
+                  </p>
+                  <p className="mt-2 text-[14px] font-medium text-[#697081]">
+                    Affects: {data.whoHasIt}
+                  </p>
                 </div>
 
                 {/* Card body */}
@@ -166,12 +173,18 @@ function ExperimentCardPage() {
                   <Row label="Willing to risk" value={data.willingToRisk} />
                   <div className="grid grid-cols-2">
                     <div className="border-r border-[#f0eeee] px-8 py-6">
-                      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#08764c]">Go signal</div>
+                      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#08764c]">
+                        Go signal
+                      </div>
                       <p className="text-[14px] leading-relaxed text-[#07122f]">{data.goSignal}</p>
                     </div>
                     <div className="px-8 py-6">
-                      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-red-600">Stop signal</div>
-                      <p className="text-[14px] leading-relaxed text-[#07122f]">{data.stopSignal}</p>
+                      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-red-600">
+                        Stop signal
+                      </div>
+                      <p className="text-[14px] leading-relaxed text-[#07122f]">
+                        {data.stopSignal}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -179,7 +192,9 @@ function ExperimentCardPage() {
 
               {/* Submit to board */}
               <div className="mt-6 rounded-[16px] bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-                <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">Submit to Idea Board</div>
+                <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+                  Submit to Idea Board
+                </div>
                 <p className="mb-6 text-[14px] font-medium text-[#697081]">
                   Add your name so the team can see who's running this experiment.
                 </p>
@@ -292,12 +307,18 @@ function MentorVerdictBlock({ evaluation }: { evaluation: MentorEvaluation }) {
   const quality = qualityConfig[evaluation.experimentQuality];
 
   return (
-    <div className={`overflow-hidden rounded-[16px] border-[1.5px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] ${verdictConfig.bgColor} ${verdictConfig.borderColor}`}>
+    <div
+      className={`overflow-hidden rounded-[16px] border-[1.5px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] ${verdictConfig.bgColor} ${verdictConfig.borderColor}`}
+    >
       {/* Verdict header */}
       <div className="border-b border-black/5 px-10 py-8">
-        <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">Mentor Verdict</div>
+        <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+          Mentor Verdict
+        </div>
         <div className="flex items-baseline gap-4">
-          <span className={`font-sans text-[52px] font-black leading-none ${verdictConfig.textColor}`}>
+          <span
+            className={`font-sans text-[52px] font-black leading-none ${verdictConfig.textColor}`}
+          >
             {verdictConfig.label}
           </span>
           <span
@@ -323,7 +344,9 @@ function MentorVerdictBlock({ evaluation }: { evaluation: MentorEvaluation }) {
 
       {/* Mentor note pull quote */}
       <div className="border-t border-black/5 px-10 py-8">
-        <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">Mentor note</div>
+        <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+          Mentor note
+        </div>
         <div className="rounded-[12px] bg-[#f9fafb] px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
           <p className="text-[16px] font-medium leading-relaxed text-[#07122f]">
             {evaluation.mentorNote}
@@ -356,7 +379,9 @@ function SignalRow({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="px-8 py-6">
-      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">{label}</div>
+      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#a1a6b3]">
+        {label}
+      </div>
       <p className="text-[15px] font-medium leading-relaxed text-[#07122f]">{value}</p>
     </div>
   );
